@@ -1,40 +1,69 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# =============================================================================
+# TalentBridge .gitignore
+# =============================================================================
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# --- Secrets / env ---
+.env
+.env.local
+.env.*.local
 
-# testing
-/coverage
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+.turbo/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
-.env
+# --- Docker build artifacts ---
+.dockerignore
 
-# vercel
-.vercel
+# --- Uploads (runtime-generated, stored in Docker volume) ---
+backend/uploads/
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
 
-# ssh keys
+# --- Logs ---
+*.log
+logs/
+
+# --- SSH keys (accidentally present in repo root) ---
 pem
 pem.pub
+
+# --- spaCy / ML model caches ---
+*.pkl
+*.bin
