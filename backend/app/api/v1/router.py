@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.v1.routes.analytics import router as analytics_router
 from app.api.v1.routes.applications import router as applications_router
 from app.api.v1.routes.auth import router as auth_router
 from app.api.v1.routes.candidates import router as candidates_router
@@ -17,6 +18,4 @@ api_router.include_router(resumes_router)
 api_router.include_router(matching_router)
 api_router.include_router(candidates_router)
 api_router.include_router(invites_router)
-
-# Registered in subsequent steps:
-# from app.api.v1.routes.analytics import router as analytics_router
+api_router.include_router(analytics_router)

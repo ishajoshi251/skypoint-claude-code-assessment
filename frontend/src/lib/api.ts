@@ -339,3 +339,41 @@ export const hrInvitesApi = {
   bulkInvite: (jobId: number, candidateIds: number[], message?: string) =>
     apiClient.post('/invites/bulk', { job_id: jobId, candidate_ids: candidateIds, message }),
 };
+
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+export interface AnalyticsSummary {
+  total_jobs: number;
+  open_jobs: number;
+  total_applications: number;
+  avg_match_score: number | null;
+  hired_count: number;
+  active_pipeline: number;
+}
+
+export interface JobFunnelRow {
+  job_id: number;
+  job_title: string;
+  company: string;
+  status: string;
+  applied: number;
+  shortlisted: number;
+  interview: number;
+  offered: number;
+  hired: number;
+  rejected: number;
+  total: number;
+}
+
+export interface SkillDemand {
+  skill: string;
+  count: number;
+}
+
+export const analyticsApi = {
+  summary: () => apiClient.get<AnalyticsSummary>('/analytics/summary'),
+  funnel: () => apiClient.get<JobFunnelRow[]>('/analytics/funnel'),
+  skills: () => apiClient.get<SkillDemand[]>('/analytics/skills'),
+};
