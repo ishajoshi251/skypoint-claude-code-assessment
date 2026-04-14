@@ -1,0 +1,26 @@
+# Dev overrides — hot reload, exposed internal ports for debugging
+# Applied automatically by docker compose when present; do NOT commit dev secrets here.
+services:
+  api:
+    build:
+      target: development
+    volumes:
+      - ./backend:/app
+      - resumes:/app/uploads/resumes
+    command: >
+      sh -c "alembic upgrade head &&
+             python -m app.db.seed &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      DEBUG: "true"
+
+  web:
+    build:
+      target: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    environment:
+      NODE_ENV: development
