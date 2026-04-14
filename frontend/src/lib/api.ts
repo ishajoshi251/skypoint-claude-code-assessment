@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/auth';
 const BASE_URL =
   typeof window === 'undefined'
     ? process.env.NEXT_PUBLIC_API_URL || 'http://api:8000'
-    : '/api'; // browser → rewrite via next.config.mjs
+    : ''; // browser → paths like /api/v1/... rewritten by next.config.mjs
 
 export const apiClient = axios.create({
   baseURL: `${BASE_URL}/api/v1`,
