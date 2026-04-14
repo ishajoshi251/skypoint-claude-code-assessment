@@ -20,41 +20,36 @@ def upgrade() -> None:
     # Enable pgvector extension (no-op if already exists)
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
-    # users
-    op.create_table(
-        "users",
-        sa.Column("id", sa.Integer(), primary_key=True, index=True, nullable=False),
-        sa.Column("email", sa.String(255), nullable=False),
-        sa.Column("password_hash", sa.String(255), nullable=False),
-        sa.Column(
-            "role",
-            sa.Enum("HR", "CANDIDATE", name="role"),
-            nullable=False,
-        ),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
-        sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            nullable=False,
-            server_default=sa.func.now(),
-        ),
-    )
-    op.create_index("ix_users_email", "users", ["email"], unique=True)
-    op.create_index("ix_users_id", "users", ["id"])
+    # Use raw SQL with IF NOT EXISTS so re-runs on a dirty volume don't crash
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id          SERIAL PRIMARY KEY,
+            email       VARCHAR(255) NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            role        VARCHAR(10)  NOT NULL,
+            is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+            created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+        )
+    """)
+    op.execute("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_email ON users (email)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_users_id ON users (id)")
+
+    # Enum type — create only if absent
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE role AS ENUM ('HR', 'CANDIDATE');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$
+    """)
 
     # candidate_profiles (stub — full columns added in next migration)
-    op.create_table(
-        "candidate_profiles",
-        sa.Column("id", sa.Integer(), primary_key=True, index=True, nullable=False),
-        sa.Column(
-            "user_id",
-            sa.Integer(),
-            sa.ForeignKey("users.id", ondelete="CASCADE"),
-            unique=True,
-            nullable=False,
-        ),
-    )
-    op.create_index("ix_candidate_profiles_id", "candidate_profiles", ["id"])
+    op.execute("""
+        CREATE TABLE IF NOT EXISTS candidate_profiles (
+            id      SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_candidate_profiles_id ON candidate_profiles (id)")
 
 
 def downgrade() -> None:
