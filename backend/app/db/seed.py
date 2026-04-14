@@ -35,6 +35,13 @@ SEED_USERS = [
     {"email": "sarah.chen@example.com",    "password": "Sarah@1234",   "role": Role.CANDIDATE},
     {"email": "david.kim@example.com",     "password": "David@1234",   "role": Role.CANDIDATE},
     {"email": "alex.rodriguez@example.com","password": "Alex@1234",    "role": Role.CANDIDATE},
+    {"email": "nina.pham@example.com",     "password": "Nina@1234",    "role": Role.CANDIDATE},
+    {"email": "james.okafor@example.com",  "password": "James@1234",   "role": Role.CANDIDATE},
+    {"email": "emily.zhao@example.com",    "password": "Emily@1234",   "role": Role.CANDIDATE},
+    {"email": "ryan.mcallister@example.com","password": "Ryan@1234",   "role": Role.CANDIDATE},
+    {"email": "aisha.mensah@example.com",  "password": "Aisha@1234",   "role": Role.CANDIDATE},
+    {"email": "tom.eriksson@example.com",  "password": "Tom@12345",    "role": Role.CANDIDATE},
+    {"email": "leila.hosseini@example.com","password": "Leila@1234",   "role": Role.CANDIDATE},
 ]
 
 # ---------------------------------------------------------------------------
@@ -306,6 +313,90 @@ SEED_PROFILES = [
         "notice_period_days": 21,
         "skills": ["Java", "Kotlin", "Apache Kafka", "Microservices", "AWS", "Cassandra", "Spring Boot", "Docker"],
     },
+    {
+        "email": "nina.pham@example.com",
+        "full_name": "Nina Pham",
+        "headline": "Frontend Engineer — React & Design Systems",
+        "location": "New York, NY",
+        "bio": "3 years crafting pixel-perfect UIs at a B2B SaaS company. Expert in React, CSS-in-JS, and Storybook-driven design systems. Collaborates closely with product designers.",
+        "years_experience": 3,
+        "current_salary": 115000,
+        "expected_salary": 140000,
+        "notice_period_days": 14,
+        "skills": ["React", "TypeScript", "CSS", "Storybook", "Figma", "Jest", "GraphQL", "Next.js"],
+    },
+    {
+        "email": "james.okafor@example.com",
+        "full_name": "James Okafor",
+        "headline": "Cloud Infrastructure Engineer — AWS & Terraform",
+        "location": "Chicago, IL",
+        "bio": "5 years building and automating cloud infrastructure on AWS. Experienced in Terraform, Ansible, and GitOps workflows. Currently leading a team migrating a monolith to containerised microservices.",
+        "years_experience": 5,
+        "current_salary": 145000,
+        "expected_salary": 170000,
+        "notice_period_days": 30,
+        "skills": ["AWS", "Terraform", "Docker", "Kubernetes", "Python", "Ansible", "CI/CD", "Linux"],
+    },
+    {
+        "email": "emily.zhao@example.com",
+        "full_name": "Emily Zhao",
+        "headline": "Data Scientist — Python & ML Pipelines",
+        "location": "Seattle, WA",
+        "bio": "4 years turning messy data into production ML models. Strong in scikit-learn, XGBoost, and PyTorch. Built real-time fraud detection pipelines at a payments company using Spark and Kafka.",
+        "years_experience": 4,
+        "current_salary": 140000,
+        "expected_salary": 165000,
+        "notice_period_days": 21,
+        "skills": ["Python", "PyTorch", "scikit-learn", "Apache Spark", "SQL", "AWS", "Airflow", "dbt"],
+    },
+    {
+        "email": "ryan.mcallister@example.com",
+        "full_name": "Ryan McAllister",
+        "headline": "iOS Engineer — Swift & SwiftUI",
+        "location": "Austin, TX",
+        "bio": "5 years shipping consumer iOS apps with millions of downloads. Deep expertise in SwiftUI, Combine, and Core Data. Led the iOS rewrite of a travel app from UIKit to SwiftUI.",
+        "years_experience": 5,
+        "current_salary": 150000,
+        "expected_salary": 175000,
+        "notice_period_days": 30,
+        "skills": ["Swift", "SwiftUI", "UIKit", "Xcode", "CocoaPods", "Core Data", "REST APIs", "Combine"],
+    },
+    {
+        "email": "aisha.mensah@example.com",
+        "full_name": "Aisha Mensah",
+        "headline": "Backend Engineer — Go & Microservices",
+        "location": "Remote",
+        "bio": "6 years building distributed systems. Moved from Python to Go 3 years ago and haven't looked back. Strong in gRPC, Kubernetes, and designing event-driven architectures.",
+        "years_experience": 6,
+        "current_salary": 160000,
+        "expected_salary": 190000,
+        "notice_period_days": 14,
+        "skills": ["Go", "gRPC", "Kubernetes", "Docker", "AWS", "PostgreSQL", "Kafka", "REST APIs"],
+    },
+    {
+        "email": "tom.eriksson@example.com",
+        "full_name": "Tom Eriksson",
+        "headline": "React Native Engineer — Cross-Platform Mobile",
+        "location": "Remote",
+        "bio": "4 years building cross-platform mobile apps in React Native for e-commerce and fintech clients. Comfortable bridging to native iOS/Android modules when needed.",
+        "years_experience": 4,
+        "current_salary": 125000,
+        "expected_salary": 150000,
+        "notice_period_days": 21,
+        "skills": ["React Native", "TypeScript", "React", "iOS", "Android", "REST APIs", "Redux", "Firebase"],
+    },
+    {
+        "email": "leila.hosseini@example.com",
+        "full_name": "Leila Hosseini",
+        "headline": "Security Engineer — Penetration Testing & Cloud Security",
+        "location": "San Francisco, CA",
+        "bio": "7 years in offensive and defensive security. Certified OSCP. Specialise in cloud security (AWS and GCP), threat modelling, and red team exercises for fintech and healthcare companies.",
+        "years_experience": 7,
+        "current_salary": 175000,
+        "expected_salary": 210000,
+        "notice_period_days": 30,
+        "skills": ["Penetration Testing", "AWS Security", "Go", "Python", "Zero Trust", "Incident Response", "GCP", "Linux"],
+    },
 ]
 
 
@@ -402,7 +493,16 @@ async def _seed_profiles(session: AsyncSession, users: dict[str, User]) -> None:
             session.add(profile)
             logger.info("Seeded profile: %s", pspec["full_name"])
         else:
-            logger.info("Profile exists, skipping: %s", pspec["email"])
+            profile.full_name = pspec.get("full_name")
+            profile.headline = pspec.get("headline")
+            profile.location = pspec.get("location")
+            profile.bio = pspec.get("bio")
+            profile.years_experience = pspec.get("years_experience")
+            profile.current_salary = pspec.get("current_salary")
+            profile.expected_salary = pspec.get("expected_salary")
+            profile.notice_period_days = pspec.get("notice_period_days")
+            profile.skills = pspec.get("skills")
+            logger.info("Updated profile: %s", pspec["email"])
 
 
 async def _seed_applications(session: AsyncSession, users: dict[str, User]) -> None:

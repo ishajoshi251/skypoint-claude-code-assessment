@@ -26,7 +26,7 @@ const NAV_ITEMS = [
 ];
 
 export function NavHr() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
 

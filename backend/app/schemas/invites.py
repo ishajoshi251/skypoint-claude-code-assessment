@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from app.models.invite import InviteStatus
 from app.schemas.matching import MatchScoreOut
+from app.schemas.resumes import CandidateProfileOut
 
 
 class BulkInviteRequest(BaseModel):
@@ -37,11 +38,7 @@ class BulkInviteResult(BaseModel):
 class CandidateSearchResult(BaseModel):
     candidate_id: int
     email: str
-    full_name: str | None
-    headline: str | None
-    location: str | None
-    skills: list[str]
-    years_experience: float | None
+    profile: CandidateProfileOut
     score: MatchScoreOut
 
 

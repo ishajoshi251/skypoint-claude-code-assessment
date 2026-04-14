@@ -26,13 +26,30 @@ function getQueryClient() {
   return browserQueryClient;
 }
 
+/** Read a cookie value by name from document.cookie (client-side only). */
+function getClientCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  return document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(`${name}=`))
+    ?.split('=')[1];
+}
+
 /**
- * SessionGate — on first mount, attempt a silent token refresh so users
- * who previously logged in don't see a flash of the login page.
+ * SessionGate — silently refreshes the access token on mount.
+ * If the user already has a tb_role cookie (still logged in), we skip
+ * the blocking spinner and refresh in the background.
+ * Only shows a spinner on first-ever load with no cookie.
+ * The middleware handles all auth-based redirects — this component only
+ * manages the in-memory token and the blocking spinner.
  */
 function SessionGate({ children }: { children: React.ReactNode }) {
   const { setAuth, clearAuth, setInitialized, isInitialized } = useAuthStore();
   const attempted = useRef(false);
+
+  // If the role cookie is present, the user is considered provisionally
+  // authenticated — don't block rendering with a spinner.
+  const hasRoleCookie = typeof window !== 'undefined' && !!getClientCookie('tb_role');
 
   useEffect(() => {
     if (attempted.current) return;
@@ -42,24 +59,25 @@ function SessionGate({ children }: { children: React.ReactNode }) {
       .refresh()
       .then(async (res) => {
         const token = res.data.access_token;
-        // Fetch user info with the new token
         const meRes = await authApi.me();
         const user = meRes.data;
+        // Single batched update — no double render
         setAuth(token, user);
         setRoleCookie(user.role);
       })
       .catch(() => {
-        // No valid refresh token — user needs to log in
+        // Refresh failed — clear state. The middleware will redirect to /login
+        // on the next navigation if the user hits a protected route.
         clearAuth();
         clearRoleCookie();
       })
       .finally(() => {
         setInitialized();
       });
-  }, [setAuth, clearAuth, setInitialized]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Brief loading gate — avoids hydration flash
-  if (!isInitialized) {
+  // Only block with spinner when there's no cookie hint — i.e. truly first load
+  if (!isInitialized && !hasRoleCookie) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />

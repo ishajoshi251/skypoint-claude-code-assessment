@@ -121,15 +121,7 @@ async def smart_search(
             CandidateSearchResult(
                 candidate_id=profile.user_id,
                 email=user.email,
-                full_name=profile.full_name,
-                headline=profile.headline,
-                location=profile.location,
-                skills=profile.skills or [],
-                years_experience=(
-                    float(profile.years_experience)
-                    if profile.years_experience is not None
-                    else None
-                ),
+                profile=CandidateProfileOut.model_validate(profile),
                 score=score,
             )
         )

@@ -35,7 +35,7 @@ export default function LoginPage() {
       setAuth(data.access_token, data.user);
       setRoleCookie(data.user.role);
       toast.success(`Welcome back, ${data.user.email.split('@')[0]}!`);
-      const from = searchParams.get('from');
+      const from = searchParams?.get('from');
       const dest = from || (data.user.role === 'HR' ? '/hr/dashboard' : '/candidate/dashboard');
       router.push(dest);
     } catch (err: unknown) {

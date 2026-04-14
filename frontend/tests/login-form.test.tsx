@@ -3,7 +3,7 @@
  * Verifies that Zod + React Hook Form enforce rules before any API call.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // ---- Mocks ----------------------------------------------------------------
@@ -55,7 +55,8 @@ describe('LoginPage — form validation', () => {
     const { user } = setup();
     const emailInput = screen.getByLabelText(/email/i);
     await user.type(emailInput, 'not-an-email');
-    fireEvent.blur(emailInput);
+    await user.type(screen.getByLabelText(/password/i), 'Hr@12345');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
     await waitFor(() => {
       expect(screen.getByText(/enter a valid email address/i)).toBeInTheDocument();
     });
