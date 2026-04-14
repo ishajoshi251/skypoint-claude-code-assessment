@@ -5,7 +5,10 @@ Read operations are public (any authenticated user).
 """
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, Query
+
+logger = structlog.get_logger(__name__)
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -16,6 +19,7 @@ from app.models.company import Company
 from app.models.job import Job, JobStatus
 from app.models.user import Role, User
 from app.schemas.jobs import JobCreate, JobListOut, JobOut, JobUpdate
+from app.services.embedding_service import build_job_text, embed_text
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -69,6 +73,15 @@ async def create_job(
         employment_type=body.employment_type,
     )
     db.add(job)
+    await db.flush()  # get job.id before embedding
+
+    # Compute and store embedding (non-blocking via executor)
+    try:
+        text = build_job_text(job.title, job.description, job.required_skills)
+        job.embedding = await embed_text(text)
+    except Exception:
+        logger.warning("Embedding failed for new job", job_id=job.id)
+
     await db.commit()
     await db.refresh(job)
 
@@ -119,8 +132,17 @@ async def update_job(
     job = await _get_job_or_404(job_id, db)
     _assert_hr_owns_job(job, current_user)
 
-    for field, value in body.model_dump(exclude_unset=True).items():
+    updated_fields = body.model_dump(exclude_unset=True)
+    for field, value in updated_fields.items():
         setattr(job, field, value)
+
+    # Re-embed if description, title, or skills changed
+    if updated_fields.keys() & {"title", "description", "required_skills"}:
+        try:
+            text = build_job_text(job.title, job.description, job.required_skills)
+            job.embedding = await embed_text(text)
+        except Exception:
+            logger.warning("Re-embedding failed for job", job_id=job.id)
 
     await db.commit()
     await db.refresh(job, ["company"])

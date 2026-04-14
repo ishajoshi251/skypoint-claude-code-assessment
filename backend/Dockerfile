@@ -36,6 +36,12 @@ RUN uv pip install --system --no-cache .
 # Verify key binaries exist (fail fast if something went wrong)
 RUN alembic --version && uvicorn --version && python -c "import fastapi"
 
+# Pre-cache sentence-transformers model so containers start without network calls.
+# HF_HOME points to /app/.cache which is copied to runtime and owned by appuser.
+ENV HF_HOME=/app/.cache/huggingface
+RUN mkdir -p /app/.cache/huggingface && \
+    python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 # ---------------------------------------------------------------------------
 # Stage 2: runtime — slim, non-root
 # ---------------------------------------------------------------------------
@@ -59,6 +65,10 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin/alembic \
                     /usr/local/bin/uvicorn \
                     /usr/local/bin/
+
+# Copy pre-cached HuggingFace model (avoids runtime download)
+COPY --from=builder /app/.cache /app/.cache
+ENV HF_HOME=/app/.cache/huggingface
 
 # Copy application source
 COPY --chown=appuser:appgroup . .

@@ -24,6 +24,7 @@ from app.models.candidate_profile import CandidateProfile
 from app.models.resume import Resume
 from app.models.user import Role, User
 from app.schemas.resumes import CandidateProfileOut, CandidateProfileUpdate, ResumeDetailOut, ResumeOut
+from app.services.embedding_service import build_candidate_text, embed_text
 from app.services.resume_parser import parse_resume
 
 logger = structlog.get_logger(__name__)
@@ -133,6 +134,16 @@ async def upload_resume(
     if parsed.experience_years is not None and profile.years_experience is None:
         profile.years_experience = parsed.experience_years
 
+    # Re-compute candidate embedding after profile update
+    try:
+        text = build_candidate_text(
+            profile.headline, profile.bio,
+            profile.skills, float(profile.years_experience) if profile.years_experience else None,
+        )
+        profile.embedding = await embed_text(text)
+    except Exception:
+        logger.warning("Embedding failed after resume upload", user_id=current_user.id)
+
     await db.commit()
     await db.refresh(resume)
 
@@ -199,6 +210,16 @@ async def update_my_profile(
 
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(profile, field, value)
+
+    # Re-embed whenever profile content changes
+    try:
+        text = build_candidate_text(
+            profile.headline, profile.bio,
+            profile.skills, float(profile.years_experience) if profile.years_experience else None,
+        )
+        profile.embedding = await embed_text(text)
+    except Exception:
+        logger.warning("Embedding failed on profile update", user_id=current_user.id)
 
     await db.commit()
     await db.refresh(profile)

@@ -4,6 +4,7 @@ CandidateProfile — full model with all profile fields.
 from sqlalchemy import ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from pgvector.sqlalchemy import Vector
 
 from app.db.base import Base
 
@@ -35,6 +36,9 @@ class CandidateProfile(Base):
     resume_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("resumes.id", ondelete="SET NULL"), nullable=True
     )
+
+    # 384-dim sentence embedding (all-MiniLM-L6-v2); null until first profile update
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(384), nullable=True)
 
     user: Mapped["User"] = relationship(  # noqa: F821
         "User", back_populates="candidate_profile"
