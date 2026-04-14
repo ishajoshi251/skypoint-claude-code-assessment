@@ -67,3 +67,4 @@ pem.pub
 # --- spaCy / ML model caches ---
 *.pkl
 *.bin
+backend/.cache/
