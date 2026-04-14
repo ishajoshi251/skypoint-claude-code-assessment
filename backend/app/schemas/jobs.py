@@ -42,6 +42,7 @@ class JobUpdate(BaseModel):
 
 class JobOut(BaseModel):
     id: int
+    posted_by_user_id: int | None
     title: str
     description: str
     required_skills: list[str]
