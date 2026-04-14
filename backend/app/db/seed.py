@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal
+from app.models.application import Application, ApplicationStatus
 from app.models.candidate_profile import CandidateProfile
 from app.models.company import Company
 from app.models.job import EmploymentType, Job, JobStatus
@@ -404,6 +405,93 @@ async def _seed_profiles(session: AsyncSession, users: dict[str, User]) -> None:
             logger.info("Profile exists, skipping: %s", pspec["email"])
 
 
+async def _seed_applications(session: AsyncSession, users: dict[str, User]) -> None:
+    """
+    Seed realistic applications spread across pipeline stages so the kanban has data.
+    Each tuple: (candidate_email, job_title, status, match_score, cover_letter_snippet)
+    """
+    APPLICATIONS = [
+        # Stripe — Senior Frontend Engineer
+        ("priya.patel@example.com",    "Senior Frontend Engineer",    ApplicationStatus.INTERVIEW,   88.0,
+         "I've spent 6 years building React/Next.js design systems and would love to bring that experience to Stripe's Dashboard team."),
+        ("candidate@test.com",         "Senior Frontend Engineer",    ApplicationStatus.SHORTLISTED, 71.0,
+         "Strong React and TypeScript background. Excited about the opportunity to work at Stripe."),
+        ("marcus.johnson@example.com", "Senior Frontend Engineer",    ApplicationStatus.APPLIED,     62.0,
+         "Full stack background with solid React skills. Looking to move more frontend-focused."),
+
+        # Stripe — Data Engineer
+        ("marcus.johnson@example.com", "Data Engineer",               ApplicationStatus.OFFERED,     85.0,
+         "4 years of Python data pipelines, dbt, and SQL at a fintech — exactly the Stripe stack."),
+        ("candidate@test.com",         "Data Engineer",               ApplicationStatus.INTERVIEW,   68.0,
+         "Experience with PostgreSQL and Docker. Keen to grow into data engineering."),
+
+        # Airbnb — Full Stack Software Engineer
+        ("candidate@test.com",         "Full Stack Software Engineer", ApplicationStatus.SHORTLISTED, 79.0,
+         "React + FastAPI is my daily stack. Would love to work on Airbnb's booking platform."),
+        ("marcus.johnson@example.com", "Full Stack Software Engineer", ApplicationStatus.HIRED,        91.0,
+         "Django + React + PostgreSQL + Elasticsearch — a direct skills match. Very excited about this role."),
+        ("priya.patel@example.com",    "Full Stack Software Engineer", ApplicationStatus.REJECTED,    55.0,
+         "Primarily frontend focused but interested in expanding to full stack at Airbnb."),
+
+        # Anthropic — Machine Learning Engineer
+        ("sarah.chen@example.com",     "Machine Learning Engineer",   ApplicationStatus.INTERVIEW,   95.0,
+         "3 years focused on LLM training, RLHF, and CUDA kernels. Anthropic's mission is exactly why I'm in this field."),
+
+        # Anthropic — Security Engineer
+        ("david.kim@example.com",      "Security Engineer",           ApplicationStatus.APPLIED,     58.0,
+         "Strong infrastructure background. Looking to pivot toward security engineering."),
+
+        # Netflix — Platform Engineer
+        ("david.kim@example.com",      "Platform Engineer",           ApplicationStatus.OFFERED,     92.0,
+         "7 years managing K8s on AWS and GCP, building GitOps pipelines, and running Prometheus/Grafana stacks."),
+        ("candidate@test.com",         "Platform Engineer",           ApplicationStatus.APPLIED,     49.0,
+         "Docker and AWS experience. Interested in platform engineering as a career direction."),
+
+        # Netflix — Backend Engineer Streaming
+        ("alex.rodriguez@example.com", "Backend Engineer — Streaming", ApplicationStatus.SHORTLISTED, 87.0,
+         "Java, Kotlin, Kafka, and Cassandra — the exact stack. 4 years building high-throughput event-driven services."),
+
+        # Shopify — DevOps
+        ("david.kim@example.com",      "DevOps / Infrastructure Engineer", ApplicationStatus.HIRED,   94.0,
+         "K8s, Terraform, GCP, Prometheus, Grafana — I've built exactly this stack at scale."),
+
+        # Shopify — React Native
+        ("priya.patel@example.com",    "React Native Engineer",       ApplicationStatus.INTERVIEW,   76.0,
+         "Deep React and TypeScript skills. React Native is a natural extension and I've shipped two side projects on it."),
+        ("candidate@test.com",         "React Native Engineer",       ApplicationStatus.APPLIED,     60.0,
+         "React experience and very keen to move into mobile development."),
+    ]
+
+    # Build lookup maps
+    job_map: dict[str, int] = {}
+    result = await session.execute(select(Job))
+    for job in result.scalars().all():
+        job_map[job.title] = job.id
+
+    for (email, job_title, status, score, cover) in APPLICATIONS:
+        user = users.get(email)
+        job_id = job_map.get(job_title)
+        if not user or not job_id:
+            logger.warning("Skipping application: user=%s job=%s", email, job_title)
+            continue
+
+        exists = await session.execute(
+            select(Application).where(
+                Application.job_id == job_id,
+                Application.candidate_id == user.id,
+            )
+        )
+        if exists.scalar_one_or_none() is None:
+            session.add(Application(
+                job_id=job_id,
+                candidate_id=user.id,
+                status=status,
+                match_score=score,
+                cover_letter=cover,
+            ))
+            logger.info("Seeded application: %s → %s (%s)", email, job_title, status.value)
+
+
 async def seed() -> None:
     async with AsyncSessionLocal() as session:
         users = await _seed_users(session)
@@ -414,6 +502,9 @@ async def seed() -> None:
         await session.commit()
 
         await _seed_profiles(session, users)
+        await session.commit()
+
+        await _seed_applications(session, users)
         await session.commit()
 
     logger.info("Seed complete.")
