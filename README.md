@@ -69,7 +69,7 @@ Seeded automatically on first boot:
 3. **Find Candidates** — paste a JD or set structured filters → ranked candidate list with score breakdowns
 4. Select candidates → **Bulk Invite** → personalised emails queued (view in MailHog)
 5. **Kanban board** — drag candidates across stages: Applied → Shortlisted → Interview → Offered/Hired/Rejected
-6. **Analytics** — per-job funnel, time-to-hire, skill demand heatmap
+6. **Analytics** — per-job funnel, skill demand heatmap, pipeline summary table
 
 ### As Candidate
 1. Log in → personalised job feed with match scores on every card
@@ -155,6 +155,7 @@ See [docs/architecture.md](docs/architecture.md) for more detail.
 - Resume file serving is authenticated but served from a local Docker volume (not S3/CDN).
 - LLM-assisted JD Writer is behind `ENABLE_LLM_JD_WRITER=true` flag and requires an OpenAI key — not enabled by default.
 - No WebSocket for real-time pipeline updates; candidate status changes require a page refresh.
+- Time-to-hire metric not implemented — the `Application` model stores only `created_at` (when applied), not individual status-change timestamps, so accurate time-to-hire cannot be derived.
 
 ---
 
