@@ -7,6 +7,7 @@
  */
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/auth';
+import { clearRoleCookie } from '@/lib/auth';
 
 const BASE_URL =
   typeof window === 'undefined'
@@ -37,12 +38,24 @@ function _processQueue(token: string | null) {
   _queue = [];
 }
 
+function _isAuthControlRequest(url?: string) {
+  if (!url) return false;
+  return ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'].some((path) =>
+    url.includes(path),
+  );
+}
+
+function _isAuthPage() {
+  if (typeof window === 'undefined') return false;
+  return window.location.pathname === '/login' || window.location.pathname === '/register';
+}
+
 apiClient.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status !== 401 || original?._retry) {
+    if (error.response?.status !== 401 || original?._retry || _isAuthControlRequest(original?.url)) {
       return Promise.reject(error);
     }
 
@@ -78,6 +91,9 @@ apiClient.interceptors.response.use(
       _processQueue(null);
       useAuthStore.getState().clearAuth();
       if (typeof window !== 'undefined') {
+        clearRoleCookie();
+      }
+      if (typeof window !== 'undefined' && !_isAuthPage()) {
         window.location.href = '/login';
       }
       return Promise.reject(error);

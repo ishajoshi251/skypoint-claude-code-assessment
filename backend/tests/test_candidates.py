@@ -163,7 +163,11 @@ async def test_search_result_schema(client: AsyncClient):
         item = items[0]
         assert "candidate_id" in item
         assert "email" in item
+        assert "profile" in item
         assert "score" in item
+        profile = item["profile"]
+        assert "user_id" in profile
+        assert "skills" in profile
         score = item["score"]
         assert "total" in score
         assert "matched_skills" in score

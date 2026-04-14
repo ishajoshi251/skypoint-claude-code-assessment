@@ -97,7 +97,7 @@ function CandidateCard({
 
 export default function HrCandidatesPage() {
   const searchParams = useSearchParams();
-  const preselectedJobId = searchParams.get('job_id');
+  const preselectedJobId = searchParams?.get('job_id');
 
   const [queryText, setQueryText] = useState('');
   const [selectedJobId, setSelectedJobId] = useState<string>(preselectedJobId ?? '');
