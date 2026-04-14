@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -9,6 +10,8 @@ import {
   FileText,
   User,
   LogOut,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { authApi } from '@/lib/api';
@@ -23,10 +26,25 @@ const NAV_ITEMS = [
   { href: '/candidate/profile', label: 'Profile', icon: User },
 ];
 
+function useDarkMode() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains('dark'));
+  }, []);
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('tb-theme', next ? 'dark' : 'light');
+  }
+  return { dark, toggle };
+}
+
 export function NavCandidate() {
   const pathname = usePathname() ?? '';
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
+  const { dark, toggle } = useDarkMode();
 
   async function handleLogout() {
     try {
@@ -83,6 +101,10 @@ export function NavCandidate() {
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Signed in as</p>
           <p className="truncate text-sm font-medium">{user?.email}</p>
         </div>
+        <Button variant="ghost" size="sm" className="w-full justify-start text-slate-600 dark:text-slate-400" onClick={toggle}>
+          {dark ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+          {dark ? 'Light mode' : 'Dark mode'}
+        </Button>
         <Button variant="ghost" size="sm" className="w-full justify-start text-slate-600" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
