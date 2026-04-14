@@ -1,13 +1,20 @@
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
+from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.exceptions import register_exception_handlers
 
 logger = structlog.get_logger(__name__)
 settings = get_settings()
+
+# Rate limiter — uses Redis via REDIS_URL
+limiter = Limiter(key_func=get_remote_address, storage_uri=settings.REDIS_URL)
 
 
 def create_app() -> FastAPI:
@@ -20,9 +27,12 @@ def create_app() -> FastAPI:
         openapi_url="/openapi.json",
     )
 
-    # ---------------------------------------------------------------------------
-    # Middleware
-    # ---------------------------------------------------------------------------
+    # Rate limiter state
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
+
+    # CORS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
@@ -31,7 +41,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Security headers — applied via a simple middleware
+    # Security headers
     @app.middleware("http")
     async def add_security_headers(request, call_next):
         response = await call_next(request)
@@ -40,16 +50,16 @@ def create_app() -> FastAPI:
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
 
-    # ---------------------------------------------------------------------------
-    # Routes
-    # ---------------------------------------------------------------------------
-    @app.get("/health", tags=["health"], include_in_schema=False)
-    async def health_check() -> JSONResponse:
-        return JSONResponse({"status": "ok", "service": "talentbridge-api"})
+    # Global exception handlers
+    register_exception_handlers(app)
 
-    # API v1 router will be registered here in subsequent steps
-    # from app.api.v1.router import api_router
-    # app.include_router(api_router, prefix="/api/v1")
+    # Routers
+    app.include_router(api_router, prefix="/api/v1")
+
+    @app.get("/health", tags=["health"], include_in_schema=False)
+    async def health_check():
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"status": "ok", "service": "talentbridge-api"})
 
     logger.info("TalentBridge API started", env=settings.APP_ENV)
     return app

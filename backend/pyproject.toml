@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "talentbridge-api"
@@ -61,6 +61,7 @@ dev = [
     "pytest==8.2.0",
     "pytest-asyncio==0.23.6",
     "httpx==0.27.0",
+    "fakeredis[aioredis]==2.23.2",
     "ruff==0.4.4",
     "black==24.4.2",
 ]
