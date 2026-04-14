@@ -5,9 +5,9 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
-# Import Base so all models are registered when migrations run
-# (models are imported individually in alembic/versions/* or here)
-from app.db.base import Base  # noqa: F401 — registers metadata
+# Import Base + all models so Alembic sees the full metadata
+from app.db.base import Base  # noqa: F401
+import app.models  # noqa: F401 — registers all ORM models via __init__.py
 
 config = context.config
 fileConfig(config.config_file_name)
