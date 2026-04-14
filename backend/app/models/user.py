@@ -24,9 +24,12 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    # Relationships (populated in later steps)
+    # Relationships
     candidate_profile: Mapped["CandidateProfile"] = relationship(  # noqa: F821
         "CandidateProfile", back_populates="user", uselist=False, lazy="selectin"
+    )
+    resumes: Mapped[list["Resume"]] = relationship(  # noqa: F821
+        "Resume", back_populates="candidate", order_by="desc(Resume.created_at)", lazy="selectin"
     )
 
     def __repr__(self) -> str:
