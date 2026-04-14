@@ -18,7 +18,7 @@ WORKDIR /app
 # Copy manifests first (cache layer)
 COPY package.json package-lock.json* ./
 
-RUN npm ci --frozen-lockfile
+RUN npm install
 
 # ---------------------------------------------------------------------------
 # Stage 2: builder — produce standalone Next.js build

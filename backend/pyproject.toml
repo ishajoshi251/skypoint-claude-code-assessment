@@ -10,22 +10,25 @@ requires-python = ">=3.11"
 
 dependencies = [
     # Web framework
-    "fastapi==0.111.0",
+    "fastapi==0.109.0",
     "uvicorn[standard]==0.29.0",
 
     # Database
     "sqlalchemy[asyncio]==2.0.30",
     "asyncpg==0.29.0",
-    "alembic==1.13.1",
+    "alembic>=1.13.0",
     "pgvector==0.2.5",
 
     # Pydantic / settings
-    "pydantic==2.7.1",
+    "pydantic[email]==2.7.1",
     "pydantic-settings==2.2.1",
 
     # Auth
+    # bcrypt pinned to <4.0: passlib 1.7.4 breaks with bcrypt 4.x (__about__ removed,
+    # and >72-byte password now raises ValueError instead of silently truncating)
     "python-jose[cryptography]==3.3.0",
     "passlib[bcrypt]==1.7.4",
+    "bcrypt==3.2.2",
 
     # Rate limiting
     "slowapi==0.1.9",
@@ -43,6 +46,9 @@ dependencies = [
     "python-multipart==0.0.9",
 
     # NLP / ML
+    # torch pinned to 2.2.2: newer versions (2.11+) made cuda-toolkit a hard dep
+    # which pulls multi-GB NVIDIA packages even on CPU-only builds
+    "torch==2.2.2",
     "spacy==3.7.4",
     "scikit-learn==1.4.2",
     "sentence-transformers==2.7.0",
