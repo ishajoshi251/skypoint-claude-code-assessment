@@ -9,6 +9,7 @@
 TalentBridge is a full-stack job portal built for modern recruitment workflows. HR teams post jobs and use AI-powered search to rank candidates by a blended match score (skills overlap, semantic similarity, experience fit, salary fit). Candidates get a personalised job feed with per-card match scores, resume auto-fill, and a live application tracker.
 
 ## Demo- https://drive.google.com/file/d/15mWs1Uai0utDlXyc5wScHrl5SseDMp4s/view?usp=sharing
+<img width="864" height="864" alt="Image" src="https://github.com/user-attachments/assets/3d353062-b0a3-46c3-bcde-31910d5eb06c" />
 ---
 
 ## 2. Architecture
