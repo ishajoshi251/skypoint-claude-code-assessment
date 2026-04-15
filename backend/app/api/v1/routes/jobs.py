@@ -7,9 +7,7 @@ from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, Query
-
-logger = structlog.get_logger(__name__)
-from sqlalchemy import func, select
+from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -21,6 +19,7 @@ from app.models.user import Role, User
 from app.schemas.jobs import JobCreate, JobListOut, JobOut, JobUpdate
 from app.services.embedding_service import build_job_text, embed_text
 
+logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
@@ -95,20 +94,47 @@ async def list_jobs(
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(get_current_user)],
     status: JobStatus | None = Query(None),
+    q: str | None = Query(None, min_length=1, max_length=120),
     location: str | None = Query(None),
+    experience: int | None = Query(None, ge=0, le=50),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ) -> JobListOut:
-    q = select(Job).options(selectinload(Job.company)).where(Job.status == JobStatus.OPEN)
+    stmt = (
+        select(Job)
+        .join(Job.company)
+        .options(selectinload(Job.company))
+        .where(Job.status == JobStatus.OPEN)
+    )
     if status is not None:
-        q = select(Job).options(selectinload(Job.company)).where(Job.status == status)
+        stmt = (
+            select(Job)
+            .join(Job.company)
+            .options(selectinload(Job.company))
+            .where(Job.status == status)
+        )
+    if q:
+        term = f"%{q.strip()}%"
+        stmt = stmt.where(
+            or_(
+                Job.title.ilike(term),
+                Job.description.ilike(term),
+                Company.name.ilike(term),
+                cast(Job.required_skills, String).ilike(term),
+            )
+        )
     if location:
-        q = q.where(Job.location.ilike(f"%{location}%"))
+        stmt = stmt.where(Job.location.ilike(f"%{location.strip()}%"))
+    if experience is not None:
+        stmt = stmt.where(
+            (Job.min_experience.is_(None) | (Job.min_experience <= experience)),
+            (Job.max_experience.is_(None) | (Job.max_experience >= experience)),
+        )
 
-    count_result = await db.execute(select(func.count()).select_from(q.subquery()))
+    count_result = await db.execute(select(func.count()).select_from(stmt.subquery()))
     total = count_result.scalar_one()
 
-    result = await db.execute(q.order_by(Job.created_at.desc()).offset(skip).limit(limit))
+    result = await db.execute(stmt.order_by(Job.created_at.desc()).offset(skip).limit(limit))
     items = list(result.scalars().all())
     return JobListOut(total=total, items=items)
 

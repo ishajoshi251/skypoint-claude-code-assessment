@@ -5,6 +5,7 @@ import { FileText, Building2, MapPin, Clock } from 'lucide-react';
 import { applicationsApi, type ApplicationOut } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth';
 
 const STATUS_CONFIG: Record<ApplicationOut['status'], { label: string; color: string; step: number }> = {
   APPLIED:     { label: 'Applied',     color: 'bg-blue-500',   step: 1 },
@@ -114,9 +115,12 @@ function ApplicationSkeleton() {
 }
 
 export default function CandidateApplicationsPage() {
+  const userId = useAuthStore((s) => s.user?.id);
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['applications', 'mine'],
+    queryKey: ['applications', 'mine', userId],
     queryFn: () => applicationsApi.mine({ limit: 50 }).then((r) => r.data),
+    enabled: !!userId,
   });
 
   const apps = data?.items ?? [];

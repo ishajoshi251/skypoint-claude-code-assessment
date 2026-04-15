@@ -13,6 +13,8 @@ class MatchScoreOut(BaseModel):
     matched_skills: list[str]
     missing_skills: list[str]
 
+    model_config = {"from_attributes": True}
+
 
 class RankedCandidateOut(BaseModel):
     candidate_id: int

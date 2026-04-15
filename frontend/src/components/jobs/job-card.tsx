@@ -15,6 +15,7 @@ interface JobCardProps {
   job: JobOut;
   matchScore?: MatchScoreOut;
   alreadyApplied?: boolean;
+  userId?: number;
 }
 
 function formatSalary(min: string | null, max: string | null) {
@@ -29,7 +30,7 @@ function formatEmploymentType(et: string) {
   return et.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function JobCard({ job, matchScore, alreadyApplied = false }: JobCardProps) {
+export function JobCard({ job, matchScore, alreadyApplied = false, userId }: JobCardProps) {
   const [applied, setApplied] = useState(alreadyApplied);
   const [applying, setApplying] = useState(false);
   const qc = useQueryClient();
@@ -40,7 +41,7 @@ export function JobCard({ job, matchScore, alreadyApplied = false }: JobCardProp
       await applicationsApi.apply(job.id);
       setApplied(true);
       toast.success('Application submitted!');
-      qc.invalidateQueries({ queryKey: ['applications', 'mine'] });
+      qc.invalidateQueries({ queryKey: ['applications', 'mine', userId] });
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       if (detail?.includes('already applied')) {

@@ -1,10 +1,12 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { Upload, Loader2, X, FileText } from 'lucide-react';
 import { hrJobsApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,15 +35,42 @@ const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
 
 export default function HrNewJobPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [parsing, setParsing] = useState(false);
+  const [jdFileName, setJdFileName] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<JobFormValues>({
     resolver: zodResolver(jobSchema),
     defaultValues: { employment_type: 'FULL_TIME' },
   });
+
+  async function handleJDFile(file: File) {
+    setParsing(true);
+    try {
+      const { data } = await hrJobsApi.parseJD(file);
+      if (data.title)           setValue('title', data.title, { shouldDirty: true });
+      if (data.company_name)    setValue('company_name', data.company_name, { shouldDirty: true });
+      if (data.description)     setValue('description', data.description, { shouldDirty: true });
+      if (data.skills.length)   setValue('skills_raw', data.skills.join(', '), { shouldDirty: true });
+      if (data.location)        setValue('location', data.location, { shouldDirty: true });
+      if (data.employment_type) setValue('employment_type', data.employment_type as JobFormValues['employment_type'], { shouldDirty: true });
+      if (data.min_experience != null) setValue('min_experience', data.min_experience, { shouldDirty: true });
+      if (data.max_experience != null) setValue('max_experience', data.max_experience, { shouldDirty: true });
+      if (data.min_salary != null) setValue('min_salary', data.min_salary, { shouldDirty: true });
+      if (data.max_salary != null) setValue('max_salary', data.max_salary, { shouldDirty: true });
+      setJdFileName(file.name);
+      toast.success('JD parsed — review and edit the fields below.');
+    } catch {
+      toast.error('Could not parse the file. Fill in the fields manually.');
+    } finally {
+      setParsing(false);
+    }
+  }
 
   async function onSubmit(values: JobFormValues) {
     try {
@@ -78,6 +107,50 @@ export default function HrNewJobPage() {
         <h1 className="text-2xl font-bold tracking-tight">Post a New Job</h1>
         <p className="text-muted-foreground">Fill in the details below. Required skills power the smart candidate matching.</p>
       </div>
+
+      {/* JD Upload */}
+      <Card className="border-dashed border-brand-300 bg-brand-50/40 dark:bg-brand-900/10">
+        <CardContent className="pt-5">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-medium">Auto-fill from Job Description</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Upload a PDF, DOCX, or TXT — title, description, skills, location and experience will be populated.</p>
+            </div>
+            {jdFileName ? (
+              <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-1.5 text-sm shrink-0">
+                <FileText className="h-4 w-4 text-brand-600" />
+                <span className="max-w-[160px] truncate text-muted-foreground">{jdFileName}</span>
+                <button
+                  type="button"
+                  onClick={() => { setJdFileName(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={parsing}
+                onClick={() => fileInputRef.current?.click()}
+                className="gap-2 shrink-0"
+              >
+                {parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {parsing ? 'Parsing…' : 'Upload JD'}
+              </Button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,.txt"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJDFile(f); }}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Info */}

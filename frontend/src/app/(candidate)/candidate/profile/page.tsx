@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Upload, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { profileApi, type CandidateProfileOut } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -70,15 +71,26 @@ function CompletenessBar({ profile }: { profile: CandidateProfileOut }) {
 // Resume uploader
 // ---------------------------------------------------------------------------
 
-function ResumeUploader({ resumeId, onUploaded }: { resumeId: number | null; onUploaded: () => void }) {
+function ResumeUploader({
+  resumeId,
+  onUploaded,
+  onParsed,
+}: {
+  resumeId: number | null;
+  onUploaded: () => void;
+  onParsed: (skills: string[], expYears: number | null) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   async function handleFile(file: File) {
     setUploading(true);
     try {
-      await profileApi.uploadResume(file);
-      toast.success('Resume uploaded and profile updated!');
+      const { data: resume } = await profileApi.uploadResume(file);
+      setFileName(file.name);
+      onParsed(resume.parsed_skills ?? [], resume.parsed_experience_years ?? null);
+      toast.success('Resume uploaded — skills auto-filled below.');
       onUploaded();
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
@@ -88,36 +100,44 @@ function ResumeUploader({ resumeId, onUploaded }: { resumeId: number | null; onU
     }
   }
 
-  function onDrop(e: React.DragEvent) {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+  function clearFile() {
+    setFileName(null);
+    if (inputRef.current) inputRef.current.value = '';
   }
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Resume</CardTitle>
-        <CardDescription>Upload PDF or DOCX — skills and experience will be auto-extracted.</CardDescription>
+        <CardDescription>Upload PDF or DOCX — profile details, skills, and experience will be auto-extracted into the form below.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div
-          onDrop={onDrop}
-          onDragOver={(e) => e.preventDefault()}
-          onClick={() => inputRef.current?.click()}
-          className="cursor-pointer rounded-lg border-2 border-dashed border-muted-foreground/30 p-8 text-center hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-900/10 transition-colors"
-        >
-          <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-          {resumeId ? (
-            <p className="text-sm font-medium text-green-600">Resume on file — drop a new one to replace</p>
-          ) : (
-            <p className="text-sm text-muted-foreground">Drag & drop or <span className="text-brand-600 font-medium">browse</span></p>
-          )}
-          <p className="text-xs text-muted-foreground mt-1">PDF or DOCX, max 10 MB</p>
-        </div>
-        <input ref={inputRef} type="file" accept=".pdf,.docx,.doc" className="hidden"
+      <CardContent className="space-y-3">
+        {fileName ? (
+          <div className="flex items-center gap-3 rounded-lg border bg-muted/40 px-4 py-3">
+            <Upload className="h-4 w-4 text-brand-600 shrink-0" />
+            <span className="flex-1 truncate text-sm font-medium">{fileName}</span>
+            <button onClick={clearFile} className="text-muted-foreground hover:text-destructive shrink-0">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div
+            onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => inputRef.current?.click()}
+            className="cursor-pointer rounded-lg border-2 border-dashed border-muted-foreground/30 p-8 text-center hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-900/10 transition-colors"
+          >
+            <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+            {resumeId
+              ? <p className="text-sm font-medium text-green-600">Resume on file — drop a new one to replace</p>
+              : <p className="text-sm text-muted-foreground">Drag & drop or <span className="text-brand-600 font-medium">browse</span></p>
+            }
+            <p className="text-xs text-muted-foreground mt-1">PDF or DOCX, max 10 MB</p>
+          </div>
+        )}
+        <input ref={inputRef} type="file" accept=".pdf,.docx" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-        {uploading && <p className="text-sm text-muted-foreground mt-2 text-center animate-pulse">Uploading & parsing…</p>}
+        {uploading && <p className="text-sm text-muted-foreground text-center animate-pulse">Uploading & parsing…</p>}
       </CardContent>
     </Card>
   );
@@ -140,8 +160,18 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-function ProfileForm({ profile, onSaved }: { profile: CandidateProfileOut; onSaved: () => void }) {
-  const { register, handleSubmit, formState: { errors, isSubmitting, isDirty } } = useForm<ProfileFormValues>({
+function ProfileForm({
+  profile,
+  onSaved,
+  parsedSkills,
+  parsedExpYears,
+}: {
+  profile: CandidateProfileOut;
+  onSaved: () => void;
+  parsedSkills: string[] | null;
+  parsedExpYears: number | null;
+}) {
+  const { register, handleSubmit, setValue, reset, formState: { errors, isSubmitting, isDirty } } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       full_name:          profile.full_name ?? '',
@@ -154,6 +184,29 @@ function ProfileForm({ profile, onSaved }: { profile: CandidateProfileOut; onSav
       skills_raw:         (profile.skills ?? []).join(', '),
     },
   });
+
+  useEffect(() => {
+    reset({
+      full_name:          profile.full_name ?? '',
+      headline:           profile.headline ?? '',
+      location:           profile.location ?? '',
+      bio:                profile.bio ?? '',
+      years_experience:   profile.years_experience ?? '',
+      expected_salary:    profile.expected_salary ?? '',
+      notice_period_days: profile.notice_period_days ?? '',
+      skills_raw:         (profile.skills ?? []).join(', '),
+    });
+  }, [profile, reset]);
+
+  // Only update skills + experience when a new resume is parsed — never wipe the whole form
+  useEffect(() => {
+    if (parsedSkills !== null) {
+      setValue('skills_raw', parsedSkills.join(', '), { shouldDirty: true });
+    }
+    if (parsedExpYears !== null) {
+      setValue('years_experience', parsedExpYears, { shouldDirty: true });
+    }
+  }, [parsedSkills, parsedExpYears, setValue]);
 
   async function onSubmit(values: ProfileFormValues) {
     const skills = values.skills_raw
@@ -235,14 +288,18 @@ function ProfileForm({ profile, onSaved }: { profile: CandidateProfileOut; onSav
 
 export default function CandidateProfilePage() {
   const qc = useQueryClient();
+  const userId = useAuthStore((s) => s.user?.id);
+  const [parsedSkills, setParsedSkills] = useState<string[] | null>(null);
+  const [parsedExpYears, setParsedExpYears] = useState<number | null>(null);
 
   const { data: profile, isLoading } = useQuery({
-    queryKey: ['profile', 'me'],
+    queryKey: ['profile', 'me', userId],
     queryFn: () => profileApi.get().then((r) => r.data),
+    enabled: !!userId,
   });
 
   function refetch() {
-    qc.invalidateQueries({ queryKey: ['profile', 'me'] });
+    qc.invalidateQueries({ queryKey: ['profile', 'me', userId] });
   }
 
   if (isLoading) {
@@ -265,14 +322,18 @@ export default function CandidateProfilePage() {
       </div>
 
       <CompletenessBar profile={profile} />
-      <ResumeUploader resumeId={profile.resume_id} onUploaded={refetch} />
+      <ResumeUploader
+        resumeId={profile.resume_id}
+        onUploaded={refetch}
+        onParsed={(skills, expYears) => { setParsedSkills(skills); setParsedExpYears(expYears); }}
+      />
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Profile Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <ProfileForm profile={profile} onSaved={refetch} />
+          <ProfileForm profile={profile} onSaved={refetch} parsedSkills={parsedSkills} parsedExpYears={parsedExpYears} />
         </CardContent>
       </Card>
     </div>

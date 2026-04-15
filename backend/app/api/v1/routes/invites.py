@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.deps import get_current_user, get_db, require_role
 from app.core.exceptions import ForbiddenError, NotFoundError, ValidationError
@@ -128,17 +129,16 @@ async def bulk_invite(
             profile.full_name if profile and profile.full_name
             else candidate_user.email.split("@")[0]
         )
-        company_name = job.company.name if hasattr(job, "company") and job.company else "us"
-
-        # Eagerly load company if not already loaded
-        if not hasattr(job, "_company_loaded"):
-            from sqlalchemy.orm import selectinload
-            job_with_company = await db.execute(
-                select(Job).where(Job.id == job.id).options(selectinload(Job.company))
-            )
-            job_loaded = job_with_company.scalar_one_or_none()
-            if job_loaded and job_loaded.company:
-                company_name = job_loaded.company.name
+        # Eagerly load company to avoid lazy-load in async context
+        job_with_company = await db.execute(
+            select(Job).where(Job.id == job.id).options(selectinload(Job.company))
+        )
+        job_loaded = job_with_company.scalar_one_or_none()
+        company_name = (
+            job_loaded.company.name
+            if job_loaded and job_loaded.company
+            else "us"
+        )
 
         subject, html_body = build_invite_email(
             candidate_name=candidate_name,

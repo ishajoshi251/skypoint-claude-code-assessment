@@ -1,10 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { Briefcase, FileText, Star, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { jobsApi, applicationsApi, profileApi, type CandidateProfileOut } from '@/lib/api';
 import { JobCard } from '@/components/jobs/job-card';
+import { useAuthStore } from '@/stores/auth';
 
 function computeProfileStrength(profile: CandidateProfileOut | undefined) {
   if (!profile) return 0;
@@ -18,14 +20,18 @@ function computeProfileStrength(profile: CandidateProfileOut | undefined) {
 }
 
 export default function CandidateDashboard() {
+  const userId = useAuthStore((s) => s.user?.id);
+
   const { data: profile } = useQuery({
-    queryKey: ['profile', 'me'],
+    queryKey: ['profile', 'me', userId],
     queryFn: () => profileApi.get().then((r) => r.data),
+    enabled: !!userId,
   });
 
   const { data: appsData } = useQuery({
-    queryKey: ['applications', 'mine'],
+    queryKey: ['applications', 'mine', userId],
     queryFn: () => applicationsApi.mine({ limit: 50 }).then((r) => r.data),
+    enabled: !!userId,
   });
 
   const { data: jobsData } = useQuery({
@@ -39,8 +45,9 @@ export default function CandidateDashboard() {
 
   const scoreQueries = useQueries({
     queries: jobs.map((job) => ({
-      queryKey: ['match-score', job.id],
+      queryKey: ['match-score', userId, job.id],
       queryFn: () => jobsApi.matchScore(job.id).then((r) => r.data),
+      enabled: !!userId,
       staleTime: 5 * 60 * 1000,
     })),
   });
@@ -109,11 +116,17 @@ export default function CandidateDashboard() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Top Matches For You</h2>
-            <a href="/candidate/jobs" className="text-sm text-brand-600 hover:underline">View all →</a>
+            <Link href="/candidate/jobs" className="text-sm text-brand-600 hover:underline">View all →</Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {scoredJobs.map(({ job, score }) => (
-              <JobCard key={job.id} job={job} matchScore={score} alreadyApplied={appliedJobIds.has(job.id)} />
+              <JobCard
+                key={job.id}
+                job={job}
+                matchScore={score}
+                alreadyApplied={appliedJobIds.has(job.id)}
+                userId={userId}
+              />
             ))}
           </div>
         </div>

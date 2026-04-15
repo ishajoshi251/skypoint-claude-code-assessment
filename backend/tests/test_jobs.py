@@ -45,6 +45,7 @@ def _auth(token: str) -> dict:
 # Job CRUD
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_hr_can_create_job(client: AsyncClient):
     token = await _token(client, HR1)
@@ -80,6 +81,38 @@ async def test_list_jobs(client: AsyncClient):
     body = resp.json()
     assert "items" in body
     assert body["total"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_list_jobs_filters_by_keyword_location_and_experience(client: AsyncClient):
+    hr_token = await _token(client, HR1)
+    await client.post(JOBS_URL, json=JOB_PAYLOAD, headers=_auth(hr_token))
+    await client.post(
+        JOBS_URL,
+        json={
+            **JOB_PAYLOAD,
+            "title": "Frontend Designer",
+            "description": "Design polished interfaces with Figma.",
+            "required_skills": ["Figma", "CSS"],
+            "min_experience": 8,
+            "max_experience": 12,
+            "location": "New York, NY",
+            "company_name": "DesignCo",
+        },
+        headers=_auth(hr_token),
+    )
+
+    cand_token = await _token(client, CANDIDATE)
+    resp = await client.get(
+        JOBS_URL,
+        params={"q": "python", "location": "remote", "experience": 5},
+        headers=_auth(cand_token),
+    )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["title"] == "Senior Python Engineer"
 
 
 @pytest.mark.asyncio
@@ -148,6 +181,7 @@ async def test_hr_can_delete_own_job(client: AsyncClient):
 # Applications
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_candidate_can_apply(client: AsyncClient):
     hr_token = await _token(client, HR1)
@@ -183,9 +217,7 @@ async def test_hr_cannot_apply(client: AsyncClient):
     job_resp = await client.post(JOBS_URL, json=JOB_PAYLOAD, headers=_auth(hr_token))
     job_id = job_resp.json()["id"]
 
-    resp = await client.post(
-        APPLICATIONS_URL, json={"job_id": job_id}, headers=_auth(hr_token)
-    )
+    resp = await client.post(APPLICATIONS_URL, json={"job_id": job_id}, headers=_auth(hr_token))
     assert resp.status_code == 403
 
 

@@ -14,6 +14,7 @@ from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, File, UploadFile, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,9 +24,14 @@ from app.core.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.models.candidate_profile import CandidateProfile
 from app.models.resume import Resume
 from app.models.user import Role, User
-from app.schemas.resumes import CandidateProfileOut, CandidateProfileUpdate, ResumeDetailOut, ResumeOut
+from app.schemas.resumes import (
+    CandidateProfileOut,
+    CandidateProfileUpdate,
+    ResumeDetailOut,
+    ResumeOut,
+)
 from app.services.embedding_service import build_candidate_text, embed_text
-from app.services.resume_parser import parse_resume
+from app.services.resume_parser import parse_resume, parse_job_description
 
 logger = structlog.get_logger(__name__)
 router = APIRouter(tags=["resumes"])
@@ -34,7 +40,6 @@ settings = get_settings()
 _ALLOWED_MIME_TYPES = {
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/msword",
 }
 _MAX_BYTES = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
@@ -45,9 +50,7 @@ _MAX_BYTES = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
 
 async def _get_or_create_profile(db: AsyncSession, user_id: int) -> CandidateProfile:
-    result = await db.execute(
-        select(CandidateProfile).where(CandidateProfile.user_id == user_id)
-    )
+    result = await db.execute(select(CandidateProfile).where(CandidateProfile.user_id == user_id))
     profile = result.scalar_one_or_none()
     if profile is None:
         profile = CandidateProfile(user_id=user_id)
@@ -80,15 +83,11 @@ async def upload_resume(
     """Upload a PDF or DOCX resume. Parses it and auto-updates the candidate profile."""
     mime_type = _detect_mime(file)
     if mime_type not in _ALLOWED_MIME_TYPES:
-        raise ValidationError(
-            f"Unsupported file type '{mime_type}'. Upload a PDF or DOCX."
-        )
+        raise ValidationError(f"Unsupported file type '{mime_type}'. Upload a PDF or DOCX.")
 
     file_bytes = await file.read()
     if len(file_bytes) > _MAX_BYTES:
-        raise ValidationError(
-            f"File exceeds maximum size of {settings.MAX_UPLOAD_SIZE_MB} MB."
-        )
+        raise ValidationError(f"File exceeds maximum size of {settings.MAX_UPLOAD_SIZE_MB} MB.")
 
     # Validate extension matches MIME (basic security check)
     filename = file.filename or "resume"
@@ -96,7 +95,6 @@ async def upload_resume(
     expected_ext = {
         "application/pdf": ".pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
-        "application/msword": ".doc",
     }.get(mime_type, "")
     if ext not in (expected_ext, ""):
         raise ValidationError("File extension does not match content type.")
@@ -127,18 +125,26 @@ async def upload_resume(
     # Update candidate profile
     profile = await _get_or_create_profile(db, current_user.id)
     profile.resume_id = resume.id
+    if parsed.full_name:
+        profile.full_name = parsed.full_name
+    if parsed.headline:
+        profile.headline = parsed.headline
+    if parsed.location:
+        profile.location = parsed.location
     # Only overwrite skills/experience if we extracted something useful
     if parsed.skills:
         existing = set(profile.skills or [])
         profile.skills = sorted(existing | set(parsed.skills))
-    if parsed.experience_years is not None and profile.years_experience is None:
+    if parsed.experience_years is not None:
         profile.years_experience = parsed.experience_years
 
     # Re-compute candidate embedding after profile update
     try:
         text = build_candidate_text(
-            profile.headline, profile.bio,
-            profile.skills, float(profile.years_experience) if profile.years_experience else None,
+            profile.headline,
+            profile.bio,
+            profile.skills,
+            float(profile.years_experience) if profile.years_experience else None,
         )
         profile.embedding = await embed_text(text)
     except Exception:
@@ -214,8 +220,10 @@ async def update_my_profile(
     # Re-embed whenever profile content changes
     try:
         text = build_candidate_text(
-            profile.headline, profile.bio,
-            profile.skills, float(profile.years_experience) if profile.years_experience else None,
+            profile.headline,
+            profile.bio,
+            profile.skills,
+            float(profile.years_experience) if profile.years_experience else None,
         )
         profile.embedding = await embed_text(text)
     except Exception:
@@ -224,3 +232,61 @@ async def update_my_profile(
     await db.commit()
     await db.refresh(profile)
     return CandidateProfileOut.model_validate(profile)
+
+
+# ---------------------------------------------------------------------------
+# JD parsing — HR auto-fill
+# ---------------------------------------------------------------------------
+
+_JD_ALLOWED_MIME = {
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+}
+
+
+class ParsedJDOut(BaseModel):
+    title: str | None
+    company_name: str | None
+    description: str
+    skills: list[str]
+    location: str | None
+    min_experience: float | None
+    max_experience: float | None
+    min_salary: float | None
+    max_salary: float | None
+    employment_type: str
+
+
+@router.post("/parse/jd", response_model=ParsedJDOut)
+async def parse_jd_file(
+    current_user: Annotated[User, Depends(require_role(Role.HR))],
+    file: UploadFile = File(...),
+) -> ParsedJDOut:
+    """HR uploads a PDF/DOCX/TXT job description; returns structured fields for form auto-fill."""
+    mime_type = file.content_type or ""
+    # Sniff from filename if content-type is generic/missing
+    if mime_type not in _JD_ALLOWED_MIME:
+        guessed, _ = mimetypes.guess_type(file.filename or "")
+        mime_type = guessed or mime_type
+
+    if mime_type not in _JD_ALLOWED_MIME:
+        raise ValidationError(f"Unsupported file type '{mime_type}'. Upload PDF, DOCX, or TXT.")
+
+    file_bytes = await file.read()
+    if len(file_bytes) > _MAX_BYTES:
+        raise ValidationError(f"File exceeds {settings.MAX_UPLOAD_SIZE_MB} MB.")
+
+    parsed = parse_job_description(file_bytes, mime_type)
+    return ParsedJDOut(
+        title=parsed.title,
+        company_name=parsed.company_name,
+        description=parsed.description,
+        skills=parsed.skills,
+        location=parsed.location,
+        min_experience=parsed.min_experience,
+        max_experience=parsed.max_experience,
+        min_salary=parsed.min_salary,
+        max_salary=parsed.max_salary,
+        employment_type=parsed.employment_type,
+    )

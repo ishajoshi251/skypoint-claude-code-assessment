@@ -182,7 +182,7 @@ export interface MatchScoreOut {
 }
 
 export const jobsApi = {
-  list: (params?: { skip?: number; limit?: number; location?: string }) =>
+  list: (params?: { skip?: number; limit?: number; q?: string; location?: string; experience?: number }) =>
     apiClient.get<JobListOut>('/jobs', { params }),
 
   get: (jobId: number) =>
@@ -285,12 +285,33 @@ export interface JobCreatePayload {
   employment_type?: string;
 }
 
+export interface ParsedJD {
+  title: string | null;
+  company_name: string | null;
+  description: string;
+  skills: string[];
+  location: string | null;
+  min_experience: number | null;
+  max_experience: number | null;
+  min_salary: number | null;
+  max_salary: number | null;
+  employment_type: string;
+}
+
 export const hrJobsApi = {
   list: (params?: { skip?: number; limit?: number }) =>
     apiClient.get<JobListOut>('/jobs', { params }),
 
   create: (data: JobCreatePayload) =>
     apiClient.post<JobOut>('/jobs', data),
+
+  parseJD: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiClient.post<ParsedJD>('/parse/jd', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 
   updateStatus: (jobId: number, status: 'OPEN' | 'CLOSED') =>
     apiClient.patch<JobOut>(`/jobs/${jobId}`, { status }),

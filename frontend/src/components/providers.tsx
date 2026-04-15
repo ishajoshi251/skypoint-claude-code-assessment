@@ -44,7 +44,7 @@ function getClientCookie(name: string): string | undefined {
  * manages the in-memory token and the blocking spinner.
  */
 function SessionGate({ children }: { children: React.ReactNode }) {
-  const { setAuth, clearAuth, setInitialized, isInitialized } = useAuthStore();
+  const { setAuth, setAccessToken, clearAuth, setInitialized, isInitialized } = useAuthStore();
   const attempted = useRef(false);
 
   // If the role cookie is present, the user is considered provisionally
@@ -59,6 +59,7 @@ function SessionGate({ children }: { children: React.ReactNode }) {
       .refresh()
       .then(async (res) => {
         const token = res.data.access_token;
+        setAccessToken(token);
         const meRes = await authApi.me();
         const user = meRes.data;
         // Single batched update — no double render

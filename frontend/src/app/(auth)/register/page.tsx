@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export default function RegisterPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const {
@@ -35,6 +37,7 @@ export default function RegisterPage() {
   async function onSubmit(values: RegisterFormValues) {
     try {
       const { data } = await authApi.register(values.email, values.password, values.role);
+      queryClient.clear();
       setAuth(data.access_token, data.user);
       setRoleCookie(data.user.role);
       toast.success('Account created! Welcome to TalentBridge.');

@@ -41,6 +41,8 @@ class CandidateSearchResult(BaseModel):
     profile: CandidateProfileOut
     score: MatchScoreOut
 
+    model_config = {"from_attributes": True}
+
 
 class CandidateSearchRequest(BaseModel):
     """HR can search by passing a free-text JD and/or structured filters."""

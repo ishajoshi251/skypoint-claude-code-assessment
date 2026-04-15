@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   LayoutDashboard,
@@ -45,6 +46,7 @@ function useDarkMode() {
 export function NavHr() {
   const pathname = usePathname() ?? '';
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, clearAuth } = useAuthStore();
   const { dark, toggle } = useDarkMode();
 
@@ -56,6 +58,7 @@ export function NavHr() {
     } finally {
       clearAuth();
       clearRoleCookie();
+      queryClient.clear();
       toast.success('Signed out.');
       router.push('/login');
     }

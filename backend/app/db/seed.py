@@ -27,21 +27,25 @@ settings = get_settings()
 # ---------------------------------------------------------------------------
 
 SEED_USERS = [
-    {"email": settings.SEED_HR_EMAIL,        "password": settings.SEED_HR_PASSWORD,        "role": Role.HR},
-    {"email": settings.SEED_CANDIDATE_EMAIL, "password": settings.SEED_CANDIDATE_PASSWORD, "role": Role.CANDIDATE},
+    {"email": settings.SEED_HR_EMAIL, "password": settings.SEED_HR_PASSWORD, "role": Role.HR},
+    {
+        "email": settings.SEED_CANDIDATE_EMAIL,
+        "password": settings.SEED_CANDIDATE_PASSWORD,
+        "role": Role.CANDIDATE,
+    },
     # Extra candidates for realistic match data
-    {"email": "priya.patel@example.com",   "password": "Priya@1234",   "role": Role.CANDIDATE},
-    {"email": "marcus.johnson@example.com","password": "Marcus@1234",  "role": Role.CANDIDATE},
-    {"email": "sarah.chen@example.com",    "password": "Sarah@1234",   "role": Role.CANDIDATE},
-    {"email": "david.kim@example.com",     "password": "David@1234",   "role": Role.CANDIDATE},
-    {"email": "alex.rodriguez@example.com","password": "Alex@1234",    "role": Role.CANDIDATE},
-    {"email": "nina.pham@example.com",     "password": "Nina@1234",    "role": Role.CANDIDATE},
-    {"email": "james.okafor@example.com",  "password": "James@1234",   "role": Role.CANDIDATE},
-    {"email": "emily.zhao@example.com",    "password": "Emily@1234",   "role": Role.CANDIDATE},
-    {"email": "ryan.mcallister@example.com","password": "Ryan@1234",   "role": Role.CANDIDATE},
-    {"email": "aisha.mensah@example.com",  "password": "Aisha@1234",   "role": Role.CANDIDATE},
-    {"email": "tom.eriksson@example.com",  "password": "Tom@12345",    "role": Role.CANDIDATE},
-    {"email": "leila.hosseini@example.com","password": "Leila@1234",   "role": Role.CANDIDATE},
+    {"email": "priya.patel@example.com", "password": "Priya@1234", "role": Role.CANDIDATE},
+    {"email": "marcus.johnson@example.com", "password": "Marcus@1234", "role": Role.CANDIDATE},
+    {"email": "sarah.chen@example.com", "password": "Sarah@1234", "role": Role.CANDIDATE},
+    {"email": "david.kim@example.com", "password": "David@1234", "role": Role.CANDIDATE},
+    {"email": "alex.rodriguez@example.com", "password": "Alex@1234", "role": Role.CANDIDATE},
+    {"email": "nina.pham@example.com", "password": "Nina@1234", "role": Role.CANDIDATE},
+    {"email": "james.okafor@example.com", "password": "James@1234", "role": Role.CANDIDATE},
+    {"email": "emily.zhao@example.com", "password": "Emily@1234", "role": Role.CANDIDATE},
+    {"email": "ryan.mcallister@example.com", "password": "Ryan@1234", "role": Role.CANDIDATE},
+    {"email": "aisha.mensah@example.com", "password": "Aisha@1234", "role": Role.CANDIDATE},
+    {"email": "tom.eriksson@example.com", "password": "Tom@12345", "role": Role.CANDIDATE},
+    {"email": "leila.hosseini@example.com", "password": "Leila@1234", "role": Role.CANDIDATE},
 ]
 
 # ---------------------------------------------------------------------------
@@ -65,8 +69,10 @@ SEED_COMPANIES_JOBS = [
                     "accessibility. We move fast and ship weekly — your work goes live to real users quickly."
                 ),
                 "required_skills": ["React", "TypeScript", "Next.js", "CSS", "GraphQL"],
-                "min_experience": 4, "max_experience": 8,
-                "min_salary": 160000, "max_salary": 220000,
+                "min_experience": 4,
+                "max_experience": 8,
+                "min_salary": 160000,
+                "max_salary": 220000,
                 "location": "San Francisco, CA",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -79,8 +85,10 @@ SEED_COMPANIES_JOBS = [
                     "internal data platform built on top of AWS."
                 ),
                 "required_skills": ["Python", "Apache Spark", "dbt", "SQL", "AWS", "Airflow"],
-                "min_experience": 3, "max_experience": 6,
-                "min_salary": 140000, "max_salary": 190000,
+                "min_experience": 3,
+                "max_experience": 6,
+                "min_salary": 140000,
+                "max_salary": 190000,
                 "location": "Seattle, WA",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -101,9 +109,18 @@ SEED_COMPANIES_JOBS = [
                     "You will design APIs, optimise slow queries, and build the features that guests and "
                     "hosts interact with every day."
                 ),
-                "required_skills": ["Python", "React", "PostgreSQL", "Django", "Elasticsearch", "Docker"],
-                "min_experience": 3, "max_experience": 7,
-                "min_salary": 150000, "max_salary": 210000,
+                "required_skills": [
+                    "Python",
+                    "React",
+                    "PostgreSQL",
+                    "Django",
+                    "Elasticsearch",
+                    "Docker",
+                ],
+                "min_experience": 3,
+                "max_experience": 7,
+                "min_salary": 150000,
+                "max_salary": 210000,
                 "location": "San Francisco, CA",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -116,8 +133,10 @@ SEED_COMPANIES_JOBS = [
                     "experiences. Experience with Objective-C and performance profiling is a plus."
                 ),
                 "required_skills": ["Swift", "SwiftUI", "UIKit", "Xcode", "CocoaPods", "REST APIs"],
-                "min_experience": 3, "max_experience": 7,
-                "min_salary": 145000, "max_salary": 200000,
+                "min_experience": 3,
+                "max_experience": 7,
+                "min_salary": 145000,
+                "max_salary": 200000,
                 "location": "San Francisco, CA",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -138,9 +157,18 @@ SEED_COMPANIES_JOBS = [
                     "distributed training infrastructure across thousands of GPUs. Strong Python and "
                     "PyTorch skills are required; experience with JAX or Triton is a bonus."
                 ),
-                "required_skills": ["Python", "PyTorch", "CUDA", "Distributed Training", "Transformers", "Linux"],
-                "min_experience": 4, "max_experience": 10,
-                "min_salary": 200000, "max_salary": 350000,
+                "required_skills": [
+                    "Python",
+                    "PyTorch",
+                    "CUDA",
+                    "Distributed Training",
+                    "Transformers",
+                    "Linux",
+                ],
+                "min_experience": 4,
+                "max_experience": 10,
+                "min_salary": 200000,
+                "max_salary": 350000,
                 "location": "San Francisco, CA",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -152,9 +180,18 @@ SEED_COMPANIES_JOBS = [
                     "to incidents. You will also work on model security — understanding and mitigating "
                     "adversarial inputs and prompt injection risks."
                 ),
-                "required_skills": ["Python", "Go", "Penetration Testing", "AWS Security", "Zero Trust", "Incident Response"],
-                "min_experience": 5, "max_experience": 12,
-                "min_salary": 180000, "max_salary": 280000,
+                "required_skills": [
+                    "Python",
+                    "Go",
+                    "Penetration Testing",
+                    "AWS Security",
+                    "Zero Trust",
+                    "Incident Response",
+                ],
+                "min_experience": 5,
+                "max_experience": 12,
+                "min_salary": 180000,
+                "max_salary": 280000,
                 "location": "San Francisco, CA",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -176,8 +213,10 @@ SEED_COMPANIES_JOBS = [
                     "experience for 2,000+ engineers. Experience with service meshes (Istio/Envoy) is a plus."
                 ),
                 "required_skills": ["Go", "Kubernetes", "Docker", "Terraform", "AWS", "gRPC"],
-                "min_experience": 4, "max_experience": 9,
-                "min_salary": 170000, "max_salary": 240000,
+                "min_experience": 4,
+                "max_experience": 9,
+                "min_salary": 170000,
+                "max_salary": 240000,
                 "location": "Los Gatos, CA",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -189,10 +228,105 @@ SEED_COMPANIES_JOBS = [
                     "event streaming and Cassandra for low-latency reads. You will optimise stream "
                     "startup times, implement adaptive bitrate logic, and design resilient services."
                 ),
-                "required_skills": ["Java", "Kotlin", "Apache Kafka", "Cassandra", "Microservices", "AWS"],
-                "min_experience": 3, "max_experience": 8,
-                "min_salary": 155000, "max_salary": 220000,
+                "required_skills": [
+                    "Java",
+                    "Kotlin",
+                    "Apache Kafka",
+                    "Cassandra",
+                    "Microservices",
+                    "AWS",
+                ],
+                "min_experience": 3,
+                "max_experience": 8,
+                "min_salary": 155000,
+                "max_salary": 220000,
                 "location": "Los Gatos, CA",
+                "employment_type": EmploymentType.FULL_TIME,
+            },
+        ],
+    },
+    {
+        "company": {
+            "name": "Skypoint",
+            "website": "https://skypointcloud.com",
+            "description": "Skypoint is an AI-native data platform for regulated industries.",
+        },
+        "jobs": [
+            {
+                "title": "Python Engineer",
+                "description": (
+                    "Build and maintain Python microservices powering Skypoint's AI data platform. "
+                    "You will design REST and async APIs with FastAPI, optimise PostgreSQL queries, "
+                    "write infrastructure-as-code with Terraform, and integrate LLM-based features "
+                    "using LangChain and OpenAI APIs. Strong Python fundamentals and a passion for "
+                    "clean, tested code are essential."
+                ),
+                "required_skills": [
+                    "Python",
+                    "FastAPI",
+                    "PostgreSQL",
+                    "Docker",
+                    "AWS",
+                    "REST APIs",
+                    "pytest",
+                ],
+                "min_experience": 2,
+                "max_experience": 6,
+                "min_salary": 110000,
+                "max_salary": 155000,
+                "location": "Remote",
+                "employment_type": EmploymentType.FULL_TIME,
+            },
+            {
+                "title": "AI / ML Engineer",
+                "description": (
+                    "Design and productionise machine learning and generative AI features across Skypoint's "
+                    "healthcare and financial data products. Responsibilities include fine-tuning LLMs, "
+                    "building RAG pipelines with vector databases (pgvector / Pinecone), writing training "
+                    "jobs in PyTorch, and integrating models into FastAPI services. You will work closely "
+                    "with data scientists to move experiments from notebook to production."
+                ),
+                "required_skills": [
+                    "Python",
+                    "PyTorch",
+                    "LangChain",
+                    "OpenAI API",
+                    "FastAPI",
+                    "PostgreSQL",
+                    "pgvector",
+                    "Transformers",
+                    "AWS",
+                ],
+                "min_experience": 3,
+                "max_experience": 8,
+                "min_salary": 130000,
+                "max_salary": 185000,
+                "location": "Remote",
+                "employment_type": EmploymentType.FULL_TIME,
+            },
+            {
+                "title": "Data Engineer",
+                "description": (
+                    "Build the pipelines that move, transform, and govern data for Skypoint's healthcare "
+                    "and financial clients. You will design dbt models, orchestrate workflows in Airflow, "
+                    "write performant PySpark jobs, and maintain our Azure / AWS data lake. Strong SQL "
+                    "and Python skills required; experience with HIPAA-compliant data handling is a bonus."
+                ),
+                "required_skills": [
+                    "Python",
+                    "dbt",
+                    "Airflow",
+                    "Apache Spark",
+                    "SQL",
+                    "AWS",
+                    "Azure",
+                    "Docker",
+                ],
+                "min_experience": 3,
+                "max_experience": 7,
+                "min_salary": 120000,
+                "max_salary": 160000,
+                "location": "Remote",
                 "employment_type": EmploymentType.FULL_TIME,
             },
         ],
@@ -212,9 +346,19 @@ SEED_COMPANIES_JOBS = [
                     "write Terraform modules, build GitOps pipelines, and improve our observability stack "
                     "(Prometheus, Grafana, OpenTelemetry)."
                 ),
-                "required_skills": ["Kubernetes", "Terraform", "GCP", "Docker", "Prometheus", "Grafana", "Python"],
-                "min_experience": 3, "max_experience": 7,
-                "min_salary": 130000, "max_salary": 180000,
+                "required_skills": [
+                    "Kubernetes",
+                    "Terraform",
+                    "GCP",
+                    "Docker",
+                    "Prometheus",
+                    "Grafana",
+                    "Python",
+                ],
+                "min_experience": 3,
+                "max_experience": 7,
+                "min_salary": 130000,
+                "max_salary": 180000,
                 "location": "Remote",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -226,9 +370,18 @@ SEED_COMPANIES_JOBS = [
                     "You will implement new commerce features, optimise app performance, and work closely "
                     "with our design and product teams."
                 ),
-                "required_skills": ["React Native", "TypeScript", "React", "iOS", "Android", "REST APIs"],
-                "min_experience": 2, "max_experience": 6,
-                "min_salary": 120000, "max_salary": 170000,
+                "required_skills": [
+                    "React Native",
+                    "TypeScript",
+                    "React",
+                    "iOS",
+                    "Android",
+                    "REST APIs",
+                ],
+                "min_experience": 2,
+                "max_experience": 6,
+                "min_salary": 120000,
+                "max_salary": 170000,
                 "location": "Remote",
                 "employment_type": EmploymentType.FULL_TIME,
             },
@@ -251,7 +404,16 @@ SEED_PROFILES = [
         "current_salary": 140000,
         "expected_salary": 170000,
         "notice_period_days": 30,
-        "skills": ["React", "TypeScript", "Python", "FastAPI", "PostgreSQL", "Docker", "AWS", "REST APIs"],
+        "skills": [
+            "React",
+            "TypeScript",
+            "Python",
+            "FastAPI",
+            "PostgreSQL",
+            "Docker",
+            "AWS",
+            "REST APIs",
+        ],
     },
     {
         "email": "priya.patel@example.com",
@@ -263,7 +425,16 @@ SEED_PROFILES = [
         "current_salary": 155000,
         "expected_salary": 190000,
         "notice_period_days": 21,
-        "skills": ["React", "Next.js", "TypeScript", "GraphQL", "CSS", "Figma", "Jest", "Accessibility"],
+        "skills": [
+            "React",
+            "Next.js",
+            "TypeScript",
+            "GraphQL",
+            "CSS",
+            "Figma",
+            "Jest",
+            "Accessibility",
+        ],
     },
     {
         "email": "marcus.johnson@example.com",
@@ -275,7 +446,16 @@ SEED_PROFILES = [
         "current_salary": 130000,
         "expected_salary": 155000,
         "notice_period_days": 14,
-        "skills": ["Python", "Django", "React", "PostgreSQL", "SQL", "Elasticsearch", "Docker", "dbt"],
+        "skills": [
+            "Python",
+            "Django",
+            "React",
+            "PostgreSQL",
+            "SQL",
+            "Elasticsearch",
+            "Docker",
+            "dbt",
+        ],
     },
     {
         "email": "sarah.chen@example.com",
@@ -287,7 +467,16 @@ SEED_PROFILES = [
         "current_salary": 190000,
         "expected_salary": 250000,
         "notice_period_days": 30,
-        "skills": ["Python", "PyTorch", "CUDA", "Transformers", "Distributed Training", "Linux", "JAX", "RLHF"],
+        "skills": [
+            "Python",
+            "PyTorch",
+            "CUDA",
+            "Transformers",
+            "Distributed Training",
+            "Linux",
+            "JAX",
+            "RLHF",
+        ],
     },
     {
         "email": "david.kim@example.com",
@@ -299,7 +488,17 @@ SEED_PROFILES = [
         "current_salary": 150000,
         "expected_salary": 175000,
         "notice_period_days": 30,
-        "skills": ["Kubernetes", "Terraform", "Docker", "AWS", "GCP", "Prometheus", "Grafana", "Python", "Go"],
+        "skills": [
+            "Kubernetes",
+            "Terraform",
+            "Docker",
+            "AWS",
+            "GCP",
+            "Prometheus",
+            "Grafana",
+            "Python",
+            "Go",
+        ],
     },
     {
         "email": "alex.rodriguez@example.com",
@@ -311,7 +510,16 @@ SEED_PROFILES = [
         "current_salary": 135000,
         "expected_salary": 160000,
         "notice_period_days": 21,
-        "skills": ["Java", "Kotlin", "Apache Kafka", "Microservices", "AWS", "Cassandra", "Spring Boot", "Docker"],
+        "skills": [
+            "Java",
+            "Kotlin",
+            "Apache Kafka",
+            "Microservices",
+            "AWS",
+            "Cassandra",
+            "Spring Boot",
+            "Docker",
+        ],
     },
     {
         "email": "nina.pham@example.com",
@@ -323,7 +531,16 @@ SEED_PROFILES = [
         "current_salary": 115000,
         "expected_salary": 140000,
         "notice_period_days": 14,
-        "skills": ["React", "TypeScript", "CSS", "Storybook", "Figma", "Jest", "GraphQL", "Next.js"],
+        "skills": [
+            "React",
+            "TypeScript",
+            "CSS",
+            "Storybook",
+            "Figma",
+            "Jest",
+            "GraphQL",
+            "Next.js",
+        ],
     },
     {
         "email": "james.okafor@example.com",
@@ -335,7 +552,16 @@ SEED_PROFILES = [
         "current_salary": 145000,
         "expected_salary": 170000,
         "notice_period_days": 30,
-        "skills": ["AWS", "Terraform", "Docker", "Kubernetes", "Python", "Ansible", "CI/CD", "Linux"],
+        "skills": [
+            "AWS",
+            "Terraform",
+            "Docker",
+            "Kubernetes",
+            "Python",
+            "Ansible",
+            "CI/CD",
+            "Linux",
+        ],
     },
     {
         "email": "emily.zhao@example.com",
@@ -347,7 +573,16 @@ SEED_PROFILES = [
         "current_salary": 140000,
         "expected_salary": 165000,
         "notice_period_days": 21,
-        "skills": ["Python", "PyTorch", "scikit-learn", "Apache Spark", "SQL", "AWS", "Airflow", "dbt"],
+        "skills": [
+            "Python",
+            "PyTorch",
+            "scikit-learn",
+            "Apache Spark",
+            "SQL",
+            "AWS",
+            "Airflow",
+            "dbt",
+        ],
     },
     {
         "email": "ryan.mcallister@example.com",
@@ -359,7 +594,16 @@ SEED_PROFILES = [
         "current_salary": 150000,
         "expected_salary": 175000,
         "notice_period_days": 30,
-        "skills": ["Swift", "SwiftUI", "UIKit", "Xcode", "CocoaPods", "Core Data", "REST APIs", "Combine"],
+        "skills": [
+            "Swift",
+            "SwiftUI",
+            "UIKit",
+            "Xcode",
+            "CocoaPods",
+            "Core Data",
+            "REST APIs",
+            "Combine",
+        ],
     },
     {
         "email": "aisha.mensah@example.com",
@@ -383,7 +627,16 @@ SEED_PROFILES = [
         "current_salary": 125000,
         "expected_salary": 150000,
         "notice_period_days": 21,
-        "skills": ["React Native", "TypeScript", "React", "iOS", "Android", "REST APIs", "Redux", "Firebase"],
+        "skills": [
+            "React Native",
+            "TypeScript",
+            "React",
+            "iOS",
+            "Android",
+            "REST APIs",
+            "Redux",
+            "Firebase",
+        ],
     },
     {
         "email": "leila.hosseini@example.com",
@@ -395,7 +648,16 @@ SEED_PROFILES = [
         "current_salary": 175000,
         "expected_salary": 210000,
         "notice_period_days": 30,
-        "skills": ["Penetration Testing", "AWS Security", "Go", "Python", "Zero Trust", "Incident Response", "GCP", "Linux"],
+        "skills": [
+            "Penetration Testing",
+            "AWS Security",
+            "Go",
+            "Python",
+            "Zero Trust",
+            "Incident Response",
+            "GCP",
+            "Linux",
+        ],
     },
 ]
 
@@ -403,6 +665,7 @@ SEED_PROFILES = [
 # ---------------------------------------------------------------------------
 # Seed functions
 # ---------------------------------------------------------------------------
+
 
 async def _seed_users(session: AsyncSession) -> dict[str, User]:
     users: dict[str, User] = {}
@@ -493,16 +756,7 @@ async def _seed_profiles(session: AsyncSession, users: dict[str, User]) -> None:
             session.add(profile)
             logger.info("Seeded profile: %s", pspec["full_name"])
         else:
-            profile.full_name = pspec.get("full_name")
-            profile.headline = pspec.get("headline")
-            profile.location = pspec.get("location")
-            profile.bio = pspec.get("bio")
-            profile.years_experience = pspec.get("years_experience")
-            profile.current_salary = pspec.get("current_salary")
-            profile.expected_salary = pspec.get("expected_salary")
-            profile.notice_period_days = pspec.get("notice_period_days")
-            profile.skills = pspec.get("skills")
-            logger.info("Updated profile: %s", pspec["email"])
+            logger.info("Profile exists, skipping: %s", pspec["email"])
 
 
 async def _seed_applications(session: AsyncSession, users: dict[str, User]) -> None:
@@ -512,54 +766,126 @@ async def _seed_applications(session: AsyncSession, users: dict[str, User]) -> N
     """
     APPLICATIONS = [
         # Stripe — Senior Frontend Engineer
-        ("priya.patel@example.com",    "Senior Frontend Engineer",    ApplicationStatus.INTERVIEW,   88.0,
-         "I've spent 6 years building React/Next.js design systems and would love to bring that experience to Stripe's Dashboard team."),
-        ("candidate@test.com",         "Senior Frontend Engineer",    ApplicationStatus.SHORTLISTED, 71.0,
-         "Strong React and TypeScript background. Excited about the opportunity to work at Stripe."),
-        ("marcus.johnson@example.com", "Senior Frontend Engineer",    ApplicationStatus.APPLIED,     62.0,
-         "Full stack background with solid React skills. Looking to move more frontend-focused."),
-
+        (
+            "priya.patel@example.com",
+            "Senior Frontend Engineer",
+            ApplicationStatus.INTERVIEW,
+            88.0,
+            "I've spent 6 years building React/Next.js design systems and would love to bring that experience to Stripe's Dashboard team.",
+        ),
+        (
+            "candidate@test.com",
+            "Senior Frontend Engineer",
+            ApplicationStatus.SHORTLISTED,
+            71.0,
+            "Strong React and TypeScript background. Excited about the opportunity to work at Stripe.",
+        ),
+        (
+            "marcus.johnson@example.com",
+            "Senior Frontend Engineer",
+            ApplicationStatus.APPLIED,
+            62.0,
+            "Full stack background with solid React skills. Looking to move more frontend-focused.",
+        ),
         # Stripe — Data Engineer
-        ("marcus.johnson@example.com", "Data Engineer",               ApplicationStatus.OFFERED,     85.0,
-         "4 years of Python data pipelines, dbt, and SQL at a fintech — exactly the Stripe stack."),
-        ("candidate@test.com",         "Data Engineer",               ApplicationStatus.INTERVIEW,   68.0,
-         "Experience with PostgreSQL and Docker. Keen to grow into data engineering."),
-
+        (
+            "marcus.johnson@example.com",
+            "Data Engineer",
+            ApplicationStatus.OFFERED,
+            85.0,
+            "4 years of Python data pipelines, dbt, and SQL at a fintech — exactly the Stripe stack.",
+        ),
+        (
+            "candidate@test.com",
+            "Data Engineer",
+            ApplicationStatus.INTERVIEW,
+            68.0,
+            "Experience with PostgreSQL and Docker. Keen to grow into data engineering.",
+        ),
         # Airbnb — Full Stack Software Engineer
-        ("candidate@test.com",         "Full Stack Software Engineer", ApplicationStatus.SHORTLISTED, 79.0,
-         "React + FastAPI is my daily stack. Would love to work on Airbnb's booking platform."),
-        ("marcus.johnson@example.com", "Full Stack Software Engineer", ApplicationStatus.HIRED,        91.0,
-         "Django + React + PostgreSQL + Elasticsearch — a direct skills match. Very excited about this role."),
-        ("priya.patel@example.com",    "Full Stack Software Engineer", ApplicationStatus.REJECTED,    55.0,
-         "Primarily frontend focused but interested in expanding to full stack at Airbnb."),
-
+        (
+            "candidate@test.com",
+            "Full Stack Software Engineer",
+            ApplicationStatus.SHORTLISTED,
+            79.0,
+            "React + FastAPI is my daily stack. Would love to work on Airbnb's booking platform.",
+        ),
+        (
+            "marcus.johnson@example.com",
+            "Full Stack Software Engineer",
+            ApplicationStatus.HIRED,
+            91.0,
+            "Django + React + PostgreSQL + Elasticsearch — a direct skills match. Very excited about this role.",
+        ),
+        (
+            "priya.patel@example.com",
+            "Full Stack Software Engineer",
+            ApplicationStatus.REJECTED,
+            55.0,
+            "Primarily frontend focused but interested in expanding to full stack at Airbnb.",
+        ),
         # Anthropic — Machine Learning Engineer
-        ("sarah.chen@example.com",     "Machine Learning Engineer",   ApplicationStatus.INTERVIEW,   95.0,
-         "3 years focused on LLM training, RLHF, and CUDA kernels. Anthropic's mission is exactly why I'm in this field."),
-
+        (
+            "sarah.chen@example.com",
+            "Machine Learning Engineer",
+            ApplicationStatus.INTERVIEW,
+            95.0,
+            "3 years focused on LLM training, RLHF, and CUDA kernels. Anthropic's mission is exactly why I'm in this field.",
+        ),
         # Anthropic — Security Engineer
-        ("david.kim@example.com",      "Security Engineer",           ApplicationStatus.APPLIED,     58.0,
-         "Strong infrastructure background. Looking to pivot toward security engineering."),
-
+        (
+            "david.kim@example.com",
+            "Security Engineer",
+            ApplicationStatus.APPLIED,
+            58.0,
+            "Strong infrastructure background. Looking to pivot toward security engineering.",
+        ),
         # Netflix — Platform Engineer
-        ("david.kim@example.com",      "Platform Engineer",           ApplicationStatus.OFFERED,     92.0,
-         "7 years managing K8s on AWS and GCP, building GitOps pipelines, and running Prometheus/Grafana stacks."),
-        ("candidate@test.com",         "Platform Engineer",           ApplicationStatus.APPLIED,     49.0,
-         "Docker and AWS experience. Interested in platform engineering as a career direction."),
-
+        (
+            "david.kim@example.com",
+            "Platform Engineer",
+            ApplicationStatus.OFFERED,
+            92.0,
+            "7 years managing K8s on AWS and GCP, building GitOps pipelines, and running Prometheus/Grafana stacks.",
+        ),
+        (
+            "candidate@test.com",
+            "Platform Engineer",
+            ApplicationStatus.APPLIED,
+            49.0,
+            "Docker and AWS experience. Interested in platform engineering as a career direction.",
+        ),
         # Netflix — Backend Engineer Streaming
-        ("alex.rodriguez@example.com", "Backend Engineer — Streaming", ApplicationStatus.SHORTLISTED, 87.0,
-         "Java, Kotlin, Kafka, and Cassandra — the exact stack. 4 years building high-throughput event-driven services."),
-
+        (
+            "alex.rodriguez@example.com",
+            "Backend Engineer — Streaming",
+            ApplicationStatus.SHORTLISTED,
+            87.0,
+            "Java, Kotlin, Kafka, and Cassandra — the exact stack. 4 years building high-throughput event-driven services.",
+        ),
         # Shopify — DevOps
-        ("david.kim@example.com",      "DevOps / Infrastructure Engineer", ApplicationStatus.HIRED,   94.0,
-         "K8s, Terraform, GCP, Prometheus, Grafana — I've built exactly this stack at scale."),
-
+        (
+            "david.kim@example.com",
+            "DevOps / Infrastructure Engineer",
+            ApplicationStatus.HIRED,
+            94.0,
+            "K8s, Terraform, GCP, Prometheus, Grafana — I've built exactly this stack at scale.",
+        ),
         # Shopify — React Native
-        ("priya.patel@example.com",    "React Native Engineer",       ApplicationStatus.INTERVIEW,   76.0,
-         "Deep React and TypeScript skills. React Native is a natural extension and I've shipped two side projects on it."),
-        ("candidate@test.com",         "React Native Engineer",       ApplicationStatus.APPLIED,     60.0,
-         "React experience and very keen to move into mobile development."),
+        (
+            "priya.patel@example.com",
+            "React Native Engineer",
+            ApplicationStatus.INTERVIEW,
+            76.0,
+            "Deep React and TypeScript skills. React Native is a natural extension and I've shipped two side projects on it.",
+        ),
+        (
+            "candidate@test.com",
+            "React Native Engineer",
+            ApplicationStatus.APPLIED,
+            60.0,
+            "React experience and very keen to move into mobile development.",
+        ),
     ]
 
     # Build lookup maps
@@ -568,7 +894,7 @@ async def _seed_applications(session: AsyncSession, users: dict[str, User]) -> N
     for job in result.scalars().all():
         job_map[job.title] = job.id
 
-    for (email, job_title, status, score, cover) in APPLICATIONS:
+    for email, job_title, status, score, cover in APPLICATIONS:
         user = users.get(email)
         job_id = job_map.get(job_title)
         if not user or not job_id:
@@ -582,13 +908,15 @@ async def _seed_applications(session: AsyncSession, users: dict[str, User]) -> N
             )
         )
         if exists.scalar_one_or_none() is None:
-            session.add(Application(
-                job_id=job_id,
-                candidate_id=user.id,
-                status=status,
-                match_score=score,
-                cover_letter=cover,
-            ))
+            session.add(
+                Application(
+                    job_id=job_id,
+                    candidate_id=user.id,
+                    status=status,
+                    match_score=score,
+                    cover_letter=cover,
+                )
+            )
             logger.info("Seeded application: %s → %s (%s)", email, job_title, status.value)
 
 

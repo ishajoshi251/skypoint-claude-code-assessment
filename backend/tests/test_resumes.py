@@ -8,6 +8,8 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
+from app.services.resume_parser import ParsedResume
+
 # ---------------------------------------------------------------------------
 # Minimal PDF and DOCX fixtures for testing (real binary content)
 # ---------------------------------------------------------------------------
@@ -114,9 +116,7 @@ async def test_list_my_resumes(client: AsyncClient):
             headers={"Authorization": f"Bearer {token}"},
             files={"file": ("resume.pdf", io.BytesIO(_MINIMAL_PDF), "application/pdf")},
         )
-    resp = await client.get(
-        "/api/v1/resumes/me", headers={"Authorization": f"Bearer {token}"}
-    )
+    resp = await client.get("/api/v1/resumes/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     assert len(resp.json()) == 2
 
@@ -162,9 +162,7 @@ async def test_cannot_access_other_users_resume(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_profile_creates_if_missing(client: AsyncClient):
     token = await _register_and_login(client, "profile_new@test.com", "CANDIDATE")
-    resp = await client.get(
-        "/api/v1/profile/me", headers={"Authorization": f"Bearer {token}"}
-    )
+    resp = await client.get("/api/v1/profile/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     assert resp.json()["full_name"] is None
 
@@ -204,10 +202,109 @@ async def test_upload_merges_skills_into_profile(client: AsyncClient):
         headers={"Authorization": f"Bearer {token}"},
         files={"file": ("resume.pdf", io.BytesIO(_MINIMAL_PDF), "application/pdf")},
     )
-    resp = await client.get(
-        "/api/v1/profile/me", headers={"Authorization": f"Bearer {token}"}
-    )
+    resp = await client.get("/api/v1/profile/me", headers={"Authorization": f"Bearer {token}"})
     skills = set(resp.json()["skills"] or [])
     # java and spring should still be there (merge, not replace)
     assert "java" in skills
     assert "spring" in skills
+
+
+@pytest.mark.asyncio
+async def test_upload_updates_profile_with_parsed_resume_basics(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    token = await _register_and_login(client, "profile_autofill@test.com", "CANDIDATE")
+
+    def fake_parse_resume(_file_bytes: bytes, _mime_type: str) -> ParsedResume:
+        return ParsedResume(
+            text="Devansh Joshi\nBackend Engineer\nLocation: Bengaluru, KA\nPython FastAPI",
+            skills=["python", "fastapi"],
+            experience_years=3.5,
+            full_name="Devansh Joshi",
+            headline="Backend Engineer",
+            location="Bengaluru, KA",
+        )
+
+    async def fake_embed_text(_text: str) -> list[float]:
+        return [0.0] * 384
+
+    monkeypatch.setattr("app.api.v1.routes.resumes.parse_resume", fake_parse_resume)
+    monkeypatch.setattr("app.api.v1.routes.resumes.embed_text", fake_embed_text)
+
+    upload = await client.post(
+        "/api/v1/resumes/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("resume.pdf", io.BytesIO(_MINIMAL_PDF), "application/pdf")},
+    )
+    assert upload.status_code == 201, upload.text
+
+    resp = await client.get("/api/v1/profile/me", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["full_name"] == "Devansh Joshi"
+    assert data["headline"] == "Backend Engineer"
+    assert data["location"] == "Bengaluru, KA"
+    assert data["years_experience"] == 3.5
+    assert set(data["skills"]) >= {"python", "fastapi"}
+
+
+@pytest.mark.asyncio
+async def test_parse_jd_returns_description_for_autofill(client: AsyncClient):
+    token = await _register_and_login(client, "jd_parse_hr@test.com", "HR")
+    jd_text = (
+        "Senior Backend Engineer\n"
+        "Location: Remote\n"
+        "We need 4-7 years of experience with Python, FastAPI, PostgreSQL, and AWS."
+    )
+    resp = await client.post(
+        "/api/v1/parse/jd",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("jd.txt", io.BytesIO(jd_text.encode()), "text/plain")},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["title"] == "Senior Backend Engineer"
+    assert data["description"] == (
+        "Senior Backend Engineer\n"
+        "We need 4-7 years of experience with Python, FastAPI, PostgreSQL, and AWS."
+    )
+    assert data["location"] == "Remote"
+    assert data["min_experience"] == 4.0
+    assert data["max_experience"] == 7.0
+    assert set(data["skills"]) >= {"python", "fastapi", "postgresql", "aws"}
+
+
+@pytest.mark.asyncio
+async def test_parse_labelled_jd_autofills_company_salary_and_skills(client: AsyncClient):
+    token = await _register_and_login(client, "jd_labelled_hr@test.com", "HR")
+    jd_text = (
+        "Company Name: TechNova Solutions Pvt Ltd\n"
+        "Role Name: Backend Software Engineer\n"
+        "Salary Range: ₹8,00,000 - ₹15,00,000 per annum\n"
+        "Location: Pune, India (Hybrid)\n"
+        "Skills Required:\n"
+        "- Python, AWS Lambda, API Gateway, DynamoDB\n"
+        "- REST API Development\n"
+    )
+    resp = await client.post(
+        "/api/v1/parse/jd",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("labelled-jd.txt", io.BytesIO(jd_text.encode()), "text/plain")},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["company_name"] == "TechNova Solutions Pvt Ltd"
+    assert data["title"] == "Backend Software Engineer"
+    assert data["location"] == "Pune, India (Hybrid)"
+    assert data["min_salary"] == 800000.0
+    assert data["max_salary"] == 1500000.0
+    assert "Company Name:" not in data["description"]
+    assert set(data["skills"]) >= {
+        "python",
+        "aws",
+        "lambda",
+        "api gateway",
+        "dynamodb",
+        "REST API Development",
+    }

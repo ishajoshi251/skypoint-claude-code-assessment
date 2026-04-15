@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -19,6 +20,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const {
@@ -32,6 +34,7 @@ export default function LoginPage() {
   async function onSubmit(values: LoginFormValues) {
     try {
       const { data } = await authApi.login(values.email, values.password);
+      queryClient.clear();
       setAuth(data.access_token, data.user);
       setRoleCookie(data.user.role);
       toast.success(`Welcome back, ${data.user.email.split('@')[0]}!`);
